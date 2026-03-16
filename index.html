@@ -223,7 +223,7 @@ select {
   border: 1px solid var(--border2);
   border-radius: var(--r-md);
   color: var(--text);
-  font-family: 'Geist', sans-serif;
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 15px;
   font-weight: 400;
   padding: 14px 40px 14px 16px;
@@ -413,7 +413,7 @@ select option { background: #1e1e23; color: var(--text); }
   padding: 15px 20px;
   border-radius: var(--r-md);
   border: none;
-  font-family: 'Geist', sans-serif;
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
@@ -444,7 +444,7 @@ select option { background: #1e1e23; color: var(--text); }
   border: none;
   background: none;
   color: var(--muted);
-  font-family: 'Geist', sans-serif;
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 12px;
   font-weight: 400;
   cursor: pointer;
@@ -547,7 +547,7 @@ input[type=text], input[type=password], input[type=number], input[type=date], in
   border: 1px solid var(--border2);
   border-radius: var(--r-md);
   color: var(--text);
-  font-family: 'Geist', sans-serif;
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   padding: 13px 16px;
   outline: none;
@@ -631,7 +631,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--muted);
-  font-family: 'Geist', sans-serif;
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 11px;
   font-weight: 500;
   padding: 4px 7px;
@@ -711,34 +711,18 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 <!-- ═══ SCREEN: PONTO ═══ -->
 <div id="screen-ponto" class="screen">
 
-  <!-- Name + status -->
+  <!-- Name + hotel -->
   <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:16px">
     <div>
-      <div style="font-family:'Instrument Serif',Georgia,serif;font-size:24px;font-weight:400;line-height:1.1" id="pt-name">—</div>
-      <div class="status-row" style="margin-top:8px">
-        <div class="status-pip" id="st-pip"></div>
-        <div class="status-txt" id="st-txt">fora do turno</div>
-        <div class="status-time" id="st-time"></div>
-      </div>
+      <div style="font-family:'Instrument Serif',Georgia,serif;font-size:28px;font-weight:400;line-height:1.1" id="pt-name">—</div>
+      <div id="pt-hotel-label" style="font-size:15px;color:var(--muted2);margin-top:6px;font-weight:400"></div>
     </div>
     <div id="pt-hotel-tag" class="hotel-tag"></div>
   </div>
 
-  <!-- Hotel picker (visible before entry) -->
-  <div id="hotel-picker">
-    <div class="section-label" id="hotel-label">Hotel de hoje</div>
-    <div class="hotel-grid">
-      <button class="hotel-pick kinuura" id="hb-kinuura" onclick="pickHotel('kinuura')">
-        <div class="h-dot"></div>
-        <div class="h-name">Kinuura</div>
-        <div class="h-sub" id="h-sub-kinuura">Hotel principal</div>
-      </button>
-      <button class="hotel-pick shinsuma" id="hb-shinsuma" onclick="pickHotel('shinsuma')">
-        <div class="h-dot"></div>
-        <div class="h-name">Shinsuma</div>
-        <div class="h-sub" id="h-sub-shinsuma">Hotel pequeno</div>
-      </button>
-    </div>
+  <!-- Hotel: Kinuura only for now -->
+  <div id="hotel-picker" style="display:none">
+    <div class="section-label" id="hotel-label">Hotel</div>
   </div>
 
   <!-- Quarto counters -->
@@ -898,9 +882,9 @@ const LANG = {
     hotelPrincipal:  'Hotel principal',
     hotelPequeno:    'Hotel pequeno',
     roomsLabel:      'Quartos limpos',
-    singleSub:       'quarto simples',
-    twinSub:         'duas camas',
-    tripleSub:       'três camas',
+    singleSub:       '1 Cama',
+    twinSub:         '2 Camas',
+    tripleSub:       '3 Camas',
     punchIn:         'Registrar Entrada',
     punchOut:        'Registrar Saída',
     badgeRooms:      (n) => `${n} quartos hoje`,
@@ -948,9 +932,9 @@ const LANG = {
     hotelPrincipal:  'メインホテル',
     hotelPequeno:    'サブホテル',
     roomsLabel:      '清掃済み客室',
-    singleSub:       'シングルルーム',
-    twinSub:         'ツインルーム',
-    tripleSub:       'トリプルルーム',
+    singleSub:       'ベッド1台',
+    twinSub:         'ベッド2台',
+    tripleSub:       'ベッド3台',
     punchIn:         '出勤登録',
     punchOut:        '退勤登録',
     badgeRooms:      (n) => `本日 ${n} 室`,
@@ -1226,15 +1210,18 @@ function initPonto() {
     document.getElementById('hotel-picker').style.display = 'none';
     setHotelTag(open.hotel);
     setPunchBtn(true);
-    setStatus(true, open.entrada);
+    const hotelLblOpen = document.getElementById('pt-hotel-label');
+    if (hotelLblOpen) hotelLblOpen.textContent = 'Hotel: Kinuura';
   } else {
-    document.getElementById('hotel-picker').style.display = 'block';
-    document.getElementById('hb-kinuura').classList.remove('sel');
-    document.getElementById('hb-shinsuma').classList.remove('sel');
+    // Auto-select Kinuura
+    hotel = 'kinuura';
+    document.getElementById('hotel-picker').style.display = 'none';
     document.getElementById('pt-hotel-tag').style.display = 'none';
     setPunchBtn(false);
-    setStatus(false);
   }
+  // Show hotel name below employee name
+  const hotelLbl = document.getElementById('pt-hotel-label');
+  if (hotelLbl) hotelLbl.textContent = 'Hotel: Kinuura';
 
   renderQRows();
   renderTotals();
@@ -1275,24 +1262,24 @@ function pickHotel(h) {
 function renderQRows() {
   const types = [
     { key: 'single', name: 'Single', sub: 'singleSub' },
-    { key: 'twin',   name: 'Twin',   sub: 'twinSub' },
+    { key: 'twin',   name: 'Double (Twin)',   sub: 'twinSub' },
     { key: 'triple', name: 'Triple', sub: 'tripleSub' },
   ];
   const el = document.getElementById('q-list');
   el.innerHTML = '';
-  types.forEach(t => {
-    const v = Q[t.key];
+  types.forEach(room => {
+    const v = Q[room.key];
     const row = document.createElement('div');
     row.className = 'q-row';
     row.innerHTML = `
       <div class="q-info">
-        <div class="q-name">${t.name}</div>
-        <div class="q-sub">${t.sub}</div>
+        <div class="q-name">${room.name}</div>
+        <div class="q-sub">${t(room.sub)}</div>
       </div>
       <div class="q-stepper">
-        <button class="q-minus" onclick="chQ('${t.key}',-1)">−</button>
-        <div class="q-num ${v > 0 ? 'lit' : ''}" id="qn-${t.key}">${v}</div>
-        <button class="q-plus" onclick="chQ('${t.key}',1)">+</button>
+        <button class="q-minus" onclick="chQ('${room.key}',-1)">−</button>
+        <div class="q-num ${v > 0 ? 'lit' : ''}" id="qn-${room.key}">${v}</div>
+        <button class="q-plus" onclick="chQ('${room.key}',1)">+</button>
       </div>`;
     el.appendChild(row);
   });
