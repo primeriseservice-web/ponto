@@ -995,12 +995,15 @@ const LANG = {
 
 let currentLang = localStorage.getItem('lang') || 'pt';
 
+let domReady = false;
 function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('lang', lang);
-  document.getElementById('lb-pt').classList.toggle('active', lang === 'pt');
-  document.getElementById('lb-ja').classList.toggle('active', lang === 'ja');
-  applyLang();
+  try {
+    document.getElementById('lb-pt').classList.toggle('active', lang === 'pt');
+    document.getElementById('lb-ja').classList.toggle('active', lang === 'ja');
+  } catch(e) {}
+  if (domReady) applyLang();
 }
 
 function t(key, ...args) {
@@ -1043,8 +1046,12 @@ function applyLang() {
   // Punch button
   const punchBtn = document.getElementById('punch-btn');
   if (punchBtn) {
-    const isIn = !!openRecord();
-    punchBtn.textContent = isIn ? L.punchOut : L.punchIn;
+    try {
+      const isIn = !!openRecord();
+      punchBtn.textContent = isIn ? L.punchOut : L.punchIn;
+    } catch(e) {
+      punchBtn.textContent = L.punchIn;
+    }
   }
 
   // Admin tabs
@@ -1059,18 +1066,22 @@ function applyLang() {
     if (el) el.textContent = txt;
   });
 
-  // Re-render select dropdown
-  initSelect();
+  // Update select placeholder text only
+  try {
+    const sel = document.getElementById('emp-sel');
+    if (sel && sel.options[0] && sel.options[0].value === '') {
+      sel.options[0].text = t('selectName');
+    }
+  } catch(e) {}
   // Re-render admin if open
-  if (document.getElementById('admin').classList.contains('active')) {
-    initAdmin();
-  }
+  try { if (document.getElementById('admin').classList.contains('active')) { initAdmin(); } } catch(e) {}
   // Refresh clock text immediately
   tick();
 }
 
 // Call applyLang after DOM ready
 document.addEventListener('DOMContentLoaded', () => {
+  domReady = true;
   tick();
   setLang(currentLang);
 });
@@ -1561,7 +1572,7 @@ function toast(msg, type = '') {
 }
 
 // ── INIT ─────────────────────────────────────────────────
-initSelect();
+// initSelect called on DOMContentLoaded
 
 
 
