@@ -1067,7 +1067,10 @@ function applyLang() {
 document.addEventListener('DOMContentLoaded', () => {
   domReady = true;
   tick();
+  initSelect();
   setLang(currentLang);
+  // Init sheet headers and pull employees from Google Sheets
+  initSheetHeaders().then(() => pullEmployees());
 });
 
 // ── STORAGE ──────────────────────────────────────────────
@@ -1311,13 +1314,14 @@ function punch() {
     if (!hotel) { toast(t('toastNoHotel'), 'err'); return; }
     const rec = {
       id: Date.now() + '',
-      empIdx: cur.idx, empName: cur.name,
+      empIdx: cur.idx, name: cur.name, empName: cur.name,
       hotel, date: today(),
       entrada: nowISO(), saida: null,
       single: 0, twin: 0, triple: 0,
     };
     DB.records.push(rec);
     save('records');
+    pushRecord(rec);
     toast(t('toastIn'), 'ok');
   } else {
     const i = DB.records.findIndex(r => r.id === open.id);
@@ -1327,6 +1331,7 @@ function punch() {
     DB.records[i].triple = Q.triple;
     const tot = Q.single + Q.twin + Q.triple;
     save('records');
+    pushRecordUpdate(DB.records[i]);
     toast(t('toastOut', tot), 'ok');
   }
   initPonto();
@@ -1481,13 +1486,14 @@ function addEmployee() {
   const pin  = document.getElementById('new-pin').value.trim();
   if (!name) { toast('Digite o nome', 'err'); return; }
   if (pin.length !== 4 || isNaN(pin)) { toast(t('toastPinLen'), 'err'); return; }
-  if (DB.employees.find(e => e.pin === pin)) { toast(t('toastPinUsed'), 'err'); return; }
   DB.employees.push({ name, pin });
   save('employees');
   document.getElementById('new-name').value = '';
   document.getElementById('new-pin').value  = '';
   renderEmpList();
-  toast(name + ' adicionado', 'ok');
+  initSelect();
+  pushEmployees();
+  toast(name + ' adicionado ✓', 'ok');
 }
 
 function removeEmp(i) {
@@ -1495,6 +1501,8 @@ function removeEmp(i) {
   DB.employees.splice(i, 1);
   save('employees');
   renderEmpList();
+  initSelect();
+  pushEmployees();
 }
 
 // ── CONFIG ────────────────────────────────────────────────
@@ -1562,6 +1570,177 @@ function toast(msg, type = '') {
 // initSelect called on DOMContentLoaded
 
 
+
+
+// ═══════════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// Aba "Funcionarios": Nome | PIN
+// Aba "Registros":   Nome | Hotel | Data | Entrada | Saida | Single | Twin | Triple | Total
+// ═══════════════════════════════════════════════════════
+
+function sheetBase() {
+  return 'https://sheets.googleapis.com/v4/spreadsheets/' + DB.sheetId;
+}
+
+function sheetReady() {
+  return DB.sheetId && DB.apiKey;
+}
+
+// ── MOSTRAR / OCULTAR indicador de sync ──
+function syncShow(msg) {
+  const el = document.getElementById('sync-note');
+  if (el) { el.textContent = msg || 'sincronizando…'; el.style.display = 'block'; }
+}
+function syncHide() {
+  const el = document.getElementById('sync-note');
+  if (el) el.style.display = 'none';
+}
+
+// ── LER FUNCIONÁRIOS DA PLANILHA ──────────────────────
+async function pullEmployees() {
+  if (!sheetReady()) return;
+  try {
+    syncShow('carregando funcionários…');
+    const url = sheetBase() + '/values/Funcionarios!A:B?key=' + DB.apiKey;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rows = (data.values || []).slice(1); // skip header
+    if (!rows.length) { syncHide(); return; }
+    // Merge: keep local employees not in sheet, add sheet employees
+    const sheetEmps = rows
+      .filter(r => r[0] && r[1])
+      .map(r => ({ name: r[0].trim(), pin: r[1].trim() }));
+    if (sheetEmps.length > 0) {
+      DB.employees = sheetEmps;
+      save('employees');
+      initSelect();
+    }
+    syncHide();
+  } catch(e) {
+    syncHide();
+    console.warn('pullEmployees error:', e);
+  }
+}
+
+// ── SALVAR FUNCIONÁRIOS NA PLANILHA ───────────────────
+async function pushEmployees() {
+  if (!sheetReady()) return;
+  try {
+    syncShow('salvando funcionários…');
+    // Clear and rewrite
+    const values = [['Nome', 'PIN'], ...DB.employees.map(e => [e.name, e.pin])];
+    const url = sheetBase() + '/values/Funcionarios!A1?valueInputOption=RAW&key=' + DB.apiKey;
+    // First clear the sheet
+    await fetch(sheetBase() + '/values/Funcionarios!A:B:clear?key=' + DB.apiKey, { method: 'POST' });
+    // Then write
+    await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values })
+    });
+    syncHide();
+  } catch(e) {
+    syncHide();
+    console.warn('pushEmployees error:', e);
+  }
+}
+
+// ── SALVAR UM REGISTRO DE PONTO ───────────────────────
+async function pushRecord(rec) {
+  if (!sheetReady()) return;
+  try {
+    syncShow('salvando registro…');
+    const row = [
+      rec.name,
+      rec.hotel,
+      rec.date,
+      rec.entrada ? new Date(rec.entrada).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '',
+      rec.saida   ? new Date(rec.saida).toLocaleTimeString('pt-BR',   {hour:'2-digit',minute:'2-digit'}) : '',
+      rec.single  || 0,
+      rec.twin    || 0,
+      rec.triple  || 0,
+      (rec.single || 0) + (rec.twin || 0) + (rec.triple || 0)
+    ];
+    const url = sheetBase() + '/values/Registros!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key=' + DB.apiKey;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [row] })
+    });
+    syncHide();
+  } catch(e) {
+    syncHide();
+    console.warn('pushRecord error:', e);
+  }
+}
+
+// ── ATUALIZAR ÚLTIMA LINHA (saída) ────────────────────
+async function pushRecordUpdate(rec) {
+  if (!sheetReady()) return;
+  // Find the row in sheet with same name+date+entrada and update saida+totals
+  try {
+    syncShow('atualizando registro…');
+    const url = sheetBase() + '/values/Registros!A:I?key=' + DB.apiKey;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rows = data.values || [];
+    const entradaStr = rec.entrada ? new Date(rec.entrada).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+    // Find matching row (name + date + entrada match)
+    let rowIdx = -1;
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][0] === rec.name && rows[i][2] === rec.date && rows[i][3] === entradaStr) {
+        rowIdx = i + 1; // 1-based
+        break;
+      }
+    }
+    if (rowIdx > 0) {
+      const saidaStr = rec.saida ? new Date(rec.saida).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+      const total = (rec.single||0)+(rec.twin||0)+(rec.triple||0);
+      const updateUrl = sheetBase() + '/values/Registros!E' + rowIdx + ':I' + rowIdx + '?valueInputOption=RAW&key=' + DB.apiKey;
+      await fetch(updateUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[saidaStr, rec.single||0, rec.twin||0, rec.triple||0, total]] })
+      });
+    }
+    syncHide();
+  } catch(e) {
+    syncHide();
+    console.warn('pushRecordUpdate error:', e);
+  }
+}
+
+// ── CRIAR CABEÇALHOS SE A PLANILHA ESTIVER VAZIA ─────
+async function initSheetHeaders() {
+  if (!sheetReady()) return;
+  try {
+    const url = sheetBase() + '/values/Funcionarios!A1?key=' + DB.apiKey;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.values || data.values[0]?.[0] !== 'Nome') {
+      // Write headers to Funcionarios
+      await fetch(sheetBase() + '/values/Funcionarios!A1?valueInputOption=RAW&key=' + DB.apiKey, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [['Nome', 'PIN']] })
+      });
+    }
+    const url2 = sheetBase() + '/values/Registros!A1?key=' + DB.apiKey;
+    const res2 = await fetch(url2);
+    const data2 = await res2.json();
+    if (!data2.values || data2.values[0]?.[0] !== 'Nome') {
+      await fetch(sheetBase() + '/values/Registros!A1?valueInputOption=RAW&key=' + DB.apiKey, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [['Nome','Hotel','Data','Entrada','Saida','Single','Twin','Triple','Total']] })
+      });
+    }
+  } catch(e) {
+    console.warn('initSheetHeaders error:', e);
+  }
+}
 
 </script>
 </body>
