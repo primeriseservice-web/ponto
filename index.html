@@ -1372,8 +1372,7 @@ function empColor(name) {
 
 function renderDaily() {
   const date  = document.getElementById('rpt-date').value;
-  const h     = document.getElementById('rpt-hotel').value;
-  let recs = DB.records.filter(r => r.date === date && (!h || r.hotel === h));
+  let recs = DB.records.filter(r => r.date === date);
 
   const tS = recs.reduce((a,r) => a+(r.single||0), 0);
   const tT = recs.reduce((a,r) => a+(r.twin||0), 0);
@@ -1434,8 +1433,7 @@ function renderDaily() {
 // ── MONTHLY ───────────────────────────────────────────────
 function renderMonthly() {
   const month = document.getElementById('rpt-month').value;
-  const h     = document.getElementById('rpt-mhotel').value;
-  let recs = DB.records.filter(r => r.date && r.date.startsWith(month) && (!h || r.hotel === h));
+  let recs = DB.records.filter(r => r.date && r.date.startsWith(month));
 
   const list = document.getElementById('mon-list');
   if (!recs.length) { list.innerHTML = '<div class="empty">' + t('noRecordsMon') + '</div>'; return; }
@@ -1542,8 +1540,7 @@ function exportCSV(type) {
   let rows, name, hdr, body;
   if (type === 'daily') {
     const date = document.getElementById('rpt-date').value;
-    const h    = document.getElementById('rpt-hotel').value;
-    rows = DB.records.filter(r => r.date === date && (!h || r.hotel === h));
+    rows = DB.records.filter(r => r.date === date);
     name = 'ponto-' + date + '.csv';
     hdr  = 'Nome,Hotel,Data,Entrada,Saida,Single,Twin,Triple,Total\n';
     body = rows.map(r => {
@@ -1552,8 +1549,7 @@ function exportCSV(type) {
     }).join('\n');
   } else {
     const month = document.getElementById('rpt-month').value;
-    const h     = document.getElementById('rpt-mhotel').value;
-    rows = DB.records.filter(r => r.date && r.date.startsWith(month) && (!h || r.hotel === h));
+    rows = DB.records.filter(r => r.date && r.date.startsWith(month));
     name = 'ponto-mensal-' + month + '.csv';
     const grp = {};
     rows.forEach(r => {
