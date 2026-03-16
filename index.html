@@ -145,6 +145,9 @@ body {
   padding: 28px 28px 24px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .clock-hero::before {
   content: '';
@@ -172,16 +175,17 @@ body {
   letter-spacing: 0.5px;
 }
 .clock-badge {
-  position: absolute;
-  bottom: 20px; right: 28px;
-  font-size: 11px;
+  display: none;
+  font-size: 13px;
   font-weight: 500;
   color: var(--gold);
   background: var(--gold-dim);
   border: 1px solid rgba(212,168,67,0.2);
   border-radius: 20px;
-  padding: 4px 10px;
-  display: none;
+  padding: 6px 16px;
+  margin: 10px auto 0;
+  text-align: center;
+  width: fit-content;
 }
 
 /* ── SECTION LABEL ── */
@@ -1335,8 +1339,6 @@ function adminLogout() { showScreen('select'); }
 function initAdmin() {
   if (!document.getElementById('rpt-date').value) document.getElementById('rpt-date').value = today();
   if (!document.getElementById('rpt-month').value) document.getElementById('rpt-month').value = today().slice(0, 7);
-  document.getElementById('cfg-sid').value = DB.sheetId;
-  document.getElementById('cfg-key').value = DB.apiKey;
   renderDaily(); renderMonthly(); renderEmpList();
 }
 
@@ -1614,7 +1616,7 @@ async function pullEmployees() {
     syncShow('carregando funcionários…');
     const url = sheetBase() + '/values/Funcionarios!A:B?key=' + DB.apiKey;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) { console.warn('Sheets API error:', res.status); syncHide(); return; }
     const data = await res.json();
     const rows = (data.values || []).slice(1); // skip header
     if (!rows.length) { syncHide(); return; }
@@ -1694,7 +1696,7 @@ async function pushRecordUpdate(rec) {
     syncShow('atualizando registro…');
     const url = sheetBase() + '/values/Registros!A:I?key=' + DB.apiKey;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) { console.warn('Sheets API error:', res.status); syncHide(); return; }
     const data = await res.json();
     const rows = data.values || [];
     const entradaStr = rec.entrada ? new Date(rec.entrada).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
