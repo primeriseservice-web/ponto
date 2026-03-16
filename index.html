@@ -562,7 +562,9 @@ input::placeholder { color: var(--muted); }
 input[type=number]::-webkit-inner-spin-button { display: none; }
 
 /* ── SUMMARY STRIP ── */
-.sum-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.sum-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.sum-cell-total { background: rgba(212,168,67,0.08) !important; border: 1px solid rgba(212,168,67,0.2) !important; border-radius: var(--r-sm); }
+.sum-val-total { color: var(--gold) !important; }
 .sum-cell {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -815,7 +817,7 @@ const LANG = {
     tripleSub:       '3 Camas',
     punchIn:         'Registrar Entrada',
     punchOut:        'Registrar Saída',
-    badgeRooms:      (n) => `🏨 ${n} quartos hoje`,
+    badgeRooms:      (n) => `${n} quartos hoje`,
     toastIn:         'Entrada registrada',
     toastOut:        (n) => `Saída registrada · ${n} quartos`,
     toastNoHotel:    'Selecione o hotel',
@@ -1379,10 +1381,12 @@ function renderDaily() {
   const tT = recs.reduce((a,r) => a+(r.twin||0), 0);
   const tTr = recs.reduce((a,r) => a+(r.triple||0), 0);
 
+  const tTotal = tS + tT + tTr;
   document.getElementById('day-summary').innerHTML = `
     <div class="sum-cell"><div class="sum-val">${tS}</div><div class="sum-lbl">${t('roomSingle')}</div></div>
     <div class="sum-cell"><div class="sum-val">${tT}</div><div class="sum-lbl">${t("roomTwin")}</div></div>
-    <div class="sum-cell"><div class="sum-val">${tTr}</div><div class="sum-lbl">${t("roomTriple")}</div></div>`;
+    <div class="sum-cell"><div class="sum-val">${tTr}</div><div class="sum-lbl">${t("roomTriple")}</div></div>
+    <div class="sum-cell sum-cell-total"><div class="sum-val sum-val-total">${tTotal}</div><div class="sum-lbl">Total</div></div>`;
 
   const list = document.getElementById('day-list');
   if (!recs.length) { list.innerHTML = '<div class="empty">' + t('noRecordsDay') + '</div>'; return; }
@@ -1397,9 +1401,9 @@ function renderDaily() {
   list.innerHTML = '';
   Object.values(grp).forEach(g => {
     const s  = g.recs.reduce((a,r) => a+(r.single||0), 0);
-    const t  = g.recs.reduce((a,r) => a+(r.twin||0), 0);
+    const twn = g.recs.reduce((a,r) => a+(r.twin||0), 0);
     const tr = g.recs.reduce((a,r) => a+(r.triple||0), 0);
-    const tot = s + t + tr;
+    const tot = s + twn + tr;
     const times = g.recs.map(r => {
       const ent = r.entrada ? fmtT(r.entrada) : '—';
       const sai = r.saida   ? fmtT(r.saida)   : '<span style="color:var(--green)">aberto</span>';
@@ -1414,7 +1418,6 @@ function renderDaily() {
       <div class="rep-header">
         <div>
           <div class="rep-name" style="color:${clr.text};font-weight:600">${g.name}</div>
-          <div class="rep-hotel-tag ${g.hotel}">${g.hotel}</div>
         </div>
         <div style="text-align:right">
           <div class="rep-total-num">${tot}</div>
@@ -1423,8 +1426,9 @@ function renderDaily() {
       </div>
       <div class="rep-breakdown">
         <div class="rep-type"><div class="rep-type-val">${s}</div><div class="rep-type-lbl">${t("roomSingle")}</div></div>
-        <div class="rep-type"><div class="rep-type-val">${t}</div><div class="rep-type-lbl">${t("roomTwin")}</div></div>
+        <div class="rep-type"><div class="rep-type-val">${twn}</div><div class="rep-type-lbl">${t("roomTwin")}</div></div>
         <div class="rep-type"><div class="rep-type-val">${tr}</div><div class="rep-type-lbl">${t("roomTriple")}</div></div>
+        <div class="rep-type" style="background:rgba(212,168,67,0.08)"><div class="rep-type-val" style="color:var(--gold)">${tot}</div><div class="rep-type-lbl">Total</div></div>
       </div>
       <div class="rep-time">${times}</div>`;
     list.appendChild(card);
