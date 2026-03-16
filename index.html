@@ -1380,7 +1380,7 @@ function renderDaily() {
   const tTr = recs.reduce((a,r) => a+(r.triple||0), 0);
 
   document.getElementById('day-summary').innerHTML = `
-    <div class="sum-cell"><div class="sum-val">${tS}</div><div class="sum-lbl">' + t('roomSingle') + '</div></div>
+    <div class="sum-cell"><div class="sum-val">${tS}</div><div class="sum-lbl">${t('roomSingle')}</div></div>
     <div class="sum-cell"><div class="sum-val">${tT}</div><div class="sum-lbl">${t("roomTwin")}</div></div>
     <div class="sum-cell"><div class="sum-val">${tTr}</div><div class="sum-lbl">${t("roomTriple")}</div></div>`;
 
