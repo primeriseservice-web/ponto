@@ -682,7 +682,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 
   <!-- Employee -->
   <div>
-    <div class="section-label">Funcionário</div>
+    <div class="section-label" id="lbl-funcionario">Funcionário</div>
     <div class="custom-select-wrap">
       <select id="emp-sel" onchange="onEmpChange()">
         <option value="">Selecione seu nome…</option>
@@ -705,7 +705,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
     </div>
   </div>
 
-  <button class="btn btn-gold" id="go-btn" onclick="goToEmployee()" disabled>Continuar</button>
+  <button class="btn btn-gold" id="go-btn" data-i18n="labelContinuar" onclick="goToEmployee()" disabled>Continuar</button>
 </div>
 
 <!-- ═══ SCREEN: PONTO ═══ -->
@@ -733,14 +733,14 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 
   <!-- Totals -->
   <div class="totals-bar">
-    <div class="tot-cell"><div class="tot-val" id="tv-s">0</div><div class="tot-label">Single</div></div>
-    <div class="tot-cell"><div class="tot-val" id="tv-t">0</div><div class="tot-label">Twin</div></div>
-    <div class="tot-cell"><div class="tot-val" id="tv-tr">0</div><div class="tot-label">Triple</div></div>
+    <div class="tot-cell"><div class="tot-val" id="tv-s">0</div><div class="tot-label" id="tot-lbl-s">Single</div></div>
+    <div class="tot-cell"><div class="tot-val" id="tv-t">0</div><div class="tot-label" id="tot-lbl-t">Twin</div></div>
+    <div class="tot-cell"><div class="tot-val" id="tv-tr">0</div><div class="tot-label" id="tot-lbl-tr">Triple</div></div>
   </div>
 
   <!-- Punch btn -->
   <button class="btn btn-gold" id="punch-btn" onclick="punch()">Registrar Entrada</button>
-  <button class="btn btn-outline" onclick="goBack()">← Voltar</button>
+  <button class="btn btn-outline" id="btn-voltar" onclick="goBack()">← Voltar</button>
   <div id="sync-note" style="display:none;text-align:center;font-size:11px;color:var(--muted);padding:4px 0;letter-spacing:0.5px">sincronizando…</div>
 
 </div>
@@ -748,11 +748,11 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 <!-- ═══ SCREEN: ADMIN LOGIN ═══ -->
 <div id="screen-admin-login" class="screen">
   <div class="clock-hero" style="text-align:center;padding:32px 28px">
-    <div style="font-family:'Instrument Serif',Georgia,serif;font-size:32px;margin-bottom:4px">Área Admin</div>
+    <div style="font-family:'Instrument Serif',Georgia,serif;font-size:32px;margin-bottom:4px"id="adm-title">Área Admin</div>
     <div style="font-size:13px;color:var(--muted2)">Acesso restrito</div>
   </div>
   <div>
-    <div class="field-label">Senha</div>
+    <div class="field-label" id="lbl-senha">Senha</div>
     <input type="password" id="adm-pw" placeholder="••••••" inputmode="numeric"
       onkeydown="if(event.key==='Enter')adminLogin()">
   </div>
@@ -772,60 +772,36 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 
   <!-- ── TAB: DIÁRIO ── -->
   <div id="tab-daily">
-    <div class="row2" style="margin-bottom:8px">
-      <div>
-        <div class="field-label">Data</div>
-        <input type="date" id="rpt-date" onchange="renderDaily()">
-      </div>
-      <div>
-        <div class="field-label">Hotel</div>
-        <div class="custom-select-wrap">
-          <select id="rpt-hotel" onchange="renderDaily()">
-            <option value="">Todos</option>
-            <option value="kinuura">Kinuura</option>
-            <option value="shinsuma">Shinsuma</option>
-          </select>
-        </div>
-      </div>
+    <div style="margin-bottom:8px">
+      <div class="field-label" id="lbl-data">Data</div>
+      <input type="date" id="rpt-date" onchange="renderDaily()">
     </div>
     <div class="sum-strip" id="day-summary"></div>
     <div class="scrollable" id="day-list"></div>
-    <button class="btn btn-outline" style="margin-top:8px" onclick="exportCSV('daily')">↓ Exportar CSV</button>
+    <button class="btn btn-outline" style="margin-top:8px" id="btn-export-d" onclick="exportCSV('daily')">↓ Exportar CSV</button>
   </div>
 
   <!-- ── TAB: MENSAL ── -->
   <div id="tab-monthly" style="display:none">
-    <div class="row2" style="margin-bottom:12px">
-      <div>
-        <div class="field-label">Mês</div>
-        <input type="month" id="rpt-month" onchange="renderMonthly()">
-      </div>
-      <div>
-        <div class="field-label">Hotel</div>
-        <div class="custom-select-wrap">
-          <select id="rpt-mhotel" onchange="renderMonthly()">
-            <option value="">Todos</option>
-            <option value="kinuura">Kinuura</option>
-            <option value="shinsuma">Shinsuma</option>
-          </select>
-        </div>
-      </div>
+    <div style="margin-bottom:12px">
+      <div class="field-label" id="lbl-mes">Mês</div>
+      <input type="month" id="rpt-month" onchange="renderMonthly()">
     </div>
     <div class="scrollable" id="mon-list"></div>
-    <button class="btn btn-outline" style="margin-top:8px" onclick="exportCSV('monthly')">↓ Exportar CSV</button>
+    <button class="btn btn-outline" style="margin-top:8px" id="btn-export-m" onclick="exportCSV('monthly')">↓ Exportar CSV</button>
   </div>
 
   <!-- ── TAB: EQUIPE ── -->
   <div id="tab-team" style="display:none">
     <div class="card" style="margin-bottom:8px">
-      <div class="field-label" style="margin-bottom:12px">Novo funcionário</div>
+      <div class="field-label" id="lbl-novo-func" style="margin-bottom:12px">Novo funcionário</div>
       <div style="margin-bottom:8px">
-        <input type="text" id="new-name" placeholder="Nome completo">
+        <input type="text" id="new-name" id="inp-nome" placeholder="Nome completo">
       </div>
       <div style="margin-bottom:12px">
-        <input type="number" id="new-pin" placeholder="PIN (4 dígitos)" maxlength="4" inputmode="numeric">
+        <input type="number" id="new-pin" id="inp-pin-lbl" placeholder="PIN (4 dígitos)" maxlength="4" inputmode="numeric">
       </div>
-      <button class="btn btn-gold" onclick="addEmployee()" style="font-size:14px;padding:12px">Adicionar</button>
+      <button class="btn btn-gold" id="btn-add-emp" onclick="addEmployee()" style="font-size:14px;padding:12px">Adicionar</button>
     </div>
     <div class="scrollable" id="emp-list"></div>
   </div>
@@ -833,14 +809,14 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   <!-- ── TAB: CONFIG ── -->
   <div id="tab-cfg" style="display:none">
     <div class="card" style="margin-bottom:8px">
-      <div class="field-label">Google Sheets — banco de dados</div>
+      <div class="field-label" id="lbl-gsheets">Google Sheets — banco de dados</div>
       <div style="margin-bottom:8px;margin-top:12px">
-        <input type="text" id="cfg-sid" placeholder="ID da planilha" style="font-family:'Geist Mono',monospace;font-size:12px">
+        <input type="text" id="cfg-sid" id="cfg-sid" placeholder="ID da planilha" style="font-family:'Geist Mono',monospace;font-size:12px">
       </div>
       <div style="margin-bottom:12px">
-        <input type="text" id="cfg-key" placeholder="Chave de API Google" style="font-family:'Geist Mono',monospace;font-size:12px">
+        <input type="text" id="cfg-key" id="cfg-key-ph" placeholder="Chave de API Google" style="font-family:'Geist Mono',monospace;font-size:12px">
       </div>
-      <button class="btn btn-gold" onclick="saveCfg()" style="font-size:14px;padding:12px">Salvar</button>
+      <button class="btn btn-gold" id="btn-salvar-cfg" onclick="saveCfg()" style="font-size:14px;padding:12px">Salvar</button>
     </div>
 
     <div class="info-box" style="margin-bottom:8px">
@@ -853,14 +829,14 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
     </div>
 
     <div class="card" style="margin-bottom:8px">
-      <div class="field-label">Senha do admin</div>
+      <div class="field-label" id="lbl-senha-admin">Senha do admin</div>
       <div style="margin:12px 0 12px">
-        <input type="password" id="cfg-pw" placeholder="Nova senha">
+        <input type="password" id="cfg-pw" id="cfg-pw" placeholder="Nova senha">
       </div>
-      <button class="btn btn-gold" onclick="savePass()" style="font-size:14px;padding:12px">Alterar</button>
+      <button class="btn btn-gold" id="btn-alterar" onclick="savePass()" style="font-size:14px;padding:12px">Alterar</button>
     </div>
 
-    <button class="btn btn-outline" onclick="adminLogout()">Sair do admin</button>
+    <button class="btn btn-outline" id="btn-sair" onclick="adminLogout()">Sair do admin</button>
   </div>
 
 </div><!-- /screen-admin -->
@@ -924,6 +900,32 @@ const LANG = {
     cfgPassLabel:    'Senha do admin',
     cfgPassPh:       'Nova senha',
     locale:          'pt-BR',
+    labelData:       'Data',
+    labelMes:        'Mês',
+    labelHotel:      'Hotel',
+    labelTodos:      'Todos',
+    labelNovoFunc:   'Novo funcionário',
+    labelNome:       'Nome completo',
+    labelPin:        'PIN (4 dígitos)',
+    labelAddBtn:     'Adicionar',
+    labelSalvar:     'Salvar',
+    labelAlterar:    'Alterar',
+    labelSair:       'Sair do admin',
+    labelSenhaAdmin: 'Senha do admin',
+    labelNovaSenha:  'Nova senha',
+    labelGSheets:    'Google Sheets — banco de dados',
+    labelSheetId:    'ID da planilha',
+    labelApiKey:     'Chave de API Google',
+    labelHotelKin:   'Hotel: Kinuura',
+    labelEntrada:    'Registrar Entrada',
+    punchIn:         'Registrar Entrada',
+    labelSaida:      'Registrar Saída',
+    labelVoltar:     '← Voltar',
+    labelContinuar:  'Continuar',
+    labelFuncionario:'FUNCIONÁRIO',
+    roomSingle:      'Single',
+    roomTwin:        'Double (Twin)',
+    roomTriple:      'Triple',
   },
   ja: {
     selectName:      '名前を選んでください…',
@@ -974,6 +976,31 @@ const LANG = {
     cfgPassLabel:    '管理者パスワード',
     cfgPassPh:       '新しいパスワード',
     locale:          'ja-JP',
+    labelData:       '日付',
+    labelMes:        '月',
+    labelHotel:      'ホテル',
+    labelTodos:      '全て',
+    labelNovoFunc:   '新しいスタッフ',
+    labelNome:       'フルネーム',
+    labelPin:        'PIN（4桁）',
+    labelAddBtn:     '追加',
+    labelSalvar:     '保存',
+    labelAlterar:    '変更',
+    labelSair:       '管理を終了',
+    labelSenhaAdmin: '管理者パスワード',
+    labelNovaSenha:  '新しいパスワード',
+    labelGSheets:    'Google Sheets — データベース',
+    labelSheetId:    'スプレッドシートID',
+    labelApiKey:     'Google APIキー',
+    labelHotelKin:   'ホテル: Kinuura',
+    labelEntrada:    '出勤登録',
+    labelSaida:      '退勤登録',
+    labelVoltar:     '← 戻る',
+    labelContinuar:  '続ける',
+    labelFuncionario:'スタッフ',
+    roomSingle:      'シングル',
+    roomTwin:        'ダブル（ツイン）',
+    roomTriple:      'トリプル',
   }
 };
 
@@ -997,69 +1024,80 @@ function t(key, ...args) {
 
 function applyLang() {
   const L = LANG[currentLang];
-  // html lang attr
   document.documentElement.lang = currentLang === 'ja' ? 'ja' : 'pt-BR';
 
-  // Select name dropdown placeholder
-  const sel = document.getElementById('emp-select');
-  if (sel && sel.options[0]) sel.options[0].text = L.selectName;
-
-  // Section labels
-  const labels = {
-    'pin-label':     L.pinLabel,
-    'hotel-label':   L.hotelLabel,
-    'rooms-label':   L.roomsLabel,
+  const textMap = {
+    'pin-label':        L.pinLabel,
+    'hotel-label':      L.hotelLabel,
+    'rooms-label':      L.roomsLabel,
+    'tab-btn-daily':    L.tabDaily,
+    'tab-btn-monthly':  L.tabMonthly,
+    'tab-btn-team':     L.tabTeam,
+    'tab-btn-cfg':      L.tabCfg,
+    'lbl-data':         L.labelData,
+    'lbl-mes':          L.labelMes,
+    'lbl-hotel-d':      L.labelHotel,
+    'lbl-hotel-m':      L.labelHotel,
+    'lbl-novo-func':    L.labelNovoFunc,
+    'lbl-gsheets':      L.labelGSheets,
+    'lbl-senha-admin':  L.labelSenhaAdmin,
+    'lbl-funcionario':  L.labelFuncionario,
+    'btn-add-emp':      L.labelAddBtn,
+    'btn-salvar-cfg':   L.labelSalvar,
+    'btn-alterar':      L.labelAlterar,
+    'btn-sair':         L.labelSair,
+    'btn-voltar':       L.labelVoltar,
+    'btn-export-d':     L.exportCSV,
+    'btn-export-m':     L.exportCSV,
+    'h-sub-kinuura':    L.hotelPrincipal,
+    'adm-title':        L.adminTitle,
+    'lbl-senha':        L.passLabel,
+    'tot-lbl-s':        L.roomSingle,
+    'tot-lbl-t':        L.roomTwin,
+    'tot-lbl-tr':       L.roomTriple,
   };
-  Object.entries(labels).forEach(([id, txt]) => {
+  Object.entries(textMap).forEach(([id, txt]) => {
     const el = document.getElementById(id);
-    if (el) el.textContent = txt;
+    if (el && txt) el.textContent = txt;
   });
 
-  // Hotel subtitles
-  const hSubKin = document.getElementById('h-sub-kinuura');
-  const hSubShi = document.getElementById('h-sub-shinsuma');
-  if (hSubKin) hSubKin.textContent = L.hotelPrincipal;
-  if (hSubShi) hSubShi.textContent = L.hotelPequeno;
-
-  // Room counter subs
-  document.querySelectorAll('.room-sub').forEach(el => {
-    const key = el.dataset.sub;
-    if (key) el.textContent = L[key] ?? el.textContent;
+  const phMap = {
+    'inp-nome':    L.namePlaceholder,
+    'inp-pin-lbl': L.pinPlaceholder,
+    'cfg-sid':     L.labelSheetId,
+    'cfg-key':     L.labelApiKey,
+    'cfg-pw':      L.labelNovaSenha,
+  };
+  Object.entries(phMap).forEach(([id, ph]) => {
+    const el = document.getElementById(id);
+    if (el && ph) el.placeholder = ph;
   });
 
-  // Punch button
+  ['opt-todos-d','opt-todos-m'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = L.labelTodos;
+  });
+
+  try {
+    const sel = document.getElementById('emp-sel');
+    if (sel && sel.options[0] && sel.options[0].value === '') sel.options[0].text = L.selectName;
+  } catch(e) {}
+
   const punchBtn = document.getElementById('punch-btn');
   if (punchBtn) {
     try {
       const isIn = !!openRecord();
       punchBtn.textContent = isIn ? L.punchOut : L.punchIn;
-    } catch(e) {
-      punchBtn.textContent = L.punchIn;
-    }
+    } catch(e) { punchBtn.textContent = L.punchIn; }
   }
 
-  // Admin tabs
-  const tabMap = {
-    'tab-btn-daily':   L.tabDaily,
-    'tab-btn-monthly': L.tabMonthly,
-    'tab-btn-team':    L.tabTeam,
-    'tab-btn-cfg':     L.tabCfg,
-  };
-  Object.entries(tabMap).forEach(([id, txt]) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = txt;
-  });
+  const goBtn = document.getElementById('go-btn');
+  if (goBtn) goBtn.textContent = L.labelContinuar;
 
-  // Update select placeholder text only
-  try {
-    const sel = document.getElementById('emp-sel');
-    if (sel && sel.options[0] && sel.options[0].value === '') {
-      sel.options[0].text = t('selectName');
-    }
-  } catch(e) {}
-  // Re-render admin if open
+  const hotelLbl = document.getElementById('pt-hotel-label');
+  if (hotelLbl && hotelLbl.textContent) hotelLbl.textContent = L.labelHotelKin;
+
   try { if (document.getElementById('admin').classList.contains('active')) { initAdmin(); } } catch(e) {}
-  // Refresh clock text immediately
   tick();
 }
 
@@ -1082,7 +1120,7 @@ const S = {
 const DB = {
   employees: S.get('emp', []),
   records:   S.get('rec', []),
-  adminPass: S.get('apw', '1234'),
+  adminPass: S.get('apw', '1911'),
   sheetId:   S.get('sid', '1ol4QtfpaCWdCWuBY7C5bod0IDwwC-yeFWhtLV7X5WZk'),
   apiKey:    S.get('akey', 'AIzaSyAREIBxgjDuyenzZdyObs3a9OWUSlnrVBQ'),
 };
@@ -1249,7 +1287,7 @@ function setStatus(on, entradaISO) {
 
 function setPunchBtn(isIn) {
   const b = document.getElementById('punch-btn');
-  b.textContent = isIn ? t('punchOut') : t('punchIn');
+  b.textContent = isIn ? t('labelSaida') : t('labelEntrada');
   b.className = 'btn ' + (isIn ? 'btn-danger' : 'btn-gold');
 }
 
@@ -1264,9 +1302,9 @@ function pickHotel(h) {
 
 function renderQRows() {
   const types = [
-    { key: 'single', name: 'Single', sub: 'singleSub' },
-    { key: 'twin',   name: 'Double (Twin)',   sub: 'twinSub' },
-    { key: 'triple', name: 'Triple', sub: 'tripleSub' },
+    { key: 'single', name: t('roomSingle'), sub: 'singleSub' },
+    { key: 'twin',   name: t('roomTwin'),   sub: 'twinSub' },
+    { key: 'triple', name: t('roomTriple'), sub: 'tripleSub' },
   ];
   const el = document.getElementById('q-list');
   el.innerHTML = '';
@@ -1374,9 +1412,9 @@ function renderDaily() {
   const tTr = recs.reduce((a,r) => a+(r.triple||0), 0);
 
   document.getElementById('day-summary').innerHTML = `
-    <div class="sum-cell"><div class="sum-val">${tS}</div><div class="sum-lbl">Single</div></div>
-    <div class="sum-cell"><div class="sum-val">${tT}</div><div class="sum-lbl">Twin</div></div>
-    <div class="sum-cell"><div class="sum-val">${tTr}</div><div class="sum-lbl">Triple</div></div>`;
+    <div class="sum-cell"><div class="sum-val">${tS}</div><div class="sum-lbl">' + t('roomSingle') + '</div></div>
+    <div class="sum-cell"><div class="sum-val">${tT}</div><div class="sum-lbl">${t("roomTwin")}</div></div>
+    <div class="sum-cell"><div class="sum-val">${tTr}</div><div class="sum-lbl">${t("roomTriple")}</div></div>`;
 
   const list = document.getElementById('day-list');
   if (!recs.length) { list.innerHTML = '<div class="empty">' + t('noRecordsDay') + '</div>'; return; }
@@ -1413,9 +1451,9 @@ function renderDaily() {
         </div>
       </div>
       <div class="rep-breakdown">
-        <div class="rep-type"><div class="rep-type-val">${s}</div><div class="rep-type-lbl">Single</div></div>
-        <div class="rep-type"><div class="rep-type-val">${t}</div><div class="rep-type-lbl">Twin</div></div>
-        <div class="rep-type"><div class="rep-type-val">${tr}</div><div class="rep-type-lbl">Triple</div></div>
+        <div class="rep-type"><div class="rep-type-val">${s}</div><div class="rep-type-lbl">${t("roomSingle")}</div></div>
+        <div class="rep-type"><div class="rep-type-val">${t}</div><div class="rep-type-lbl">${t("roomTwin")}</div></div>
+        <div class="rep-type"><div class="rep-type-val">${tr}</div><div class="rep-type-lbl">${t("roomTriple")}</div></div>
       </div>
       <div class="rep-time">${times}</div>`;
     list.appendChild(card);
@@ -1451,9 +1489,9 @@ function renderMonthly() {
         <span class="mon-hotel-pill ${g.hotel}">${g.hotel}</span>
       </div>
       <div class="mon-breakdown">
-        <div class="mon-type-cell"><div class="mon-type-val">${g.single}</div><div class="mon-type-lbl">Single</div></div>
-        <div class="mon-type-cell"><div class="mon-type-val">${g.twin}</div><div class="mon-type-lbl">Twin</div></div>
-        <div class="mon-type-cell"><div class="mon-type-val">${g.triple}</div><div class="mon-type-lbl">Triple</div></div>
+        <div class="mon-type-cell"><div class="mon-type-val">${g.single}</div><div class="mon-type-lbl">${t("roomSingle")}</div></div>
+        <div class="mon-type-cell"><div class="mon-type-val">${g.twin}</div><div class="mon-type-lbl">${t("roomTwin")}</div></div>
+        <div class="mon-type-cell"><div class="mon-type-val">${g.triple}</div><div class="mon-type-lbl">${t("roomTriple")}</div></div>
       </div>
       <div class="mon-total-row">
         <div class="mon-total-txt">${t('totalMonth')}</div>
