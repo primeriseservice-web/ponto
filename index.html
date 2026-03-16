@@ -907,12 +907,24 @@ const save = k => {
 
 // ── CLOCK ─────────────────────────────────────────────────
 function tick() {
-  const n = new Date();
-  const hm = n.toLocaleTimeString(t('locale'), { hour: '2-digit', minute: '2-digit' });
-  const dt = n.toLocaleDateString(t('locale'), { weekday: 'long', day: '2-digit', month: 'long' });
-  document.querySelectorAll('.clock-time').forEach(e => e.textContent = hm);
-  const cd = document.getElementById('ck-date');
-  if (cd) cd.textContent = dt.charAt(0).toUpperCase() + dt.slice(1);
+  try {
+    const n = new Date();
+    const locale = (typeof currentLang !== 'undefined' && currentLang === 'ja') ? 'ja-JP' : 'pt-BR';
+    const hm = n.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    const dt = n.toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'long' });
+    document.querySelectorAll('.clock-time').forEach(e => e.textContent = hm);
+    const cd = document.getElementById('ck-date');
+    if (cd) {
+      const dtStr = dt.charAt(0).toUpperCase() + dt.slice(1);
+      cd.textContent = dtStr;
+    }
+  } catch(e) {
+    // fallback simples
+    const n = new Date();
+    const hh = String(n.getHours()).padStart(2,'0');
+    const mm = String(n.getMinutes()).padStart(2,'0');
+    document.querySelectorAll('.clock-time').forEach(el => el.textContent = hh + ':' + mm);
+  }
 }
 setInterval(tick, 1000);
 
