@@ -1753,6 +1753,15 @@ async function initSheetHeaders() {
   }
 }
 
+
+function debugRecords() {
+  const recs = DB.records;
+  if (!recs.length) { alert('Nenhum registro no banco!'); return; }
+  const info = recs.map((r,i) => 
+    `${i+1}. nome="${r.empName||r.name||'?'}" data="${r.date}" hotel="${r.hotel}" entrada="${r.entrada?'sim':'nao'}" saida="${r.saida?'sim':'nao'}"`
+  ).join('\n');
+  alert('Registros encontrados (' + recs.length + '):\n\n' + info);
+}
 </script>
 </body>
 </html>
