@@ -170,7 +170,6 @@ body {
   font-weight: 400;
   color: var(--muted2);
   letter-spacing: 0.5px;
-  text-transform: capitalize;
 }
 .clock-badge {
   position: absolute;
@@ -812,7 +811,7 @@ const LANG = {
     tripleSub:       '3 Camas',
     punchIn:         'Registrar Entrada',
     punchOut:        'Registrar Saída',
-    badgeRooms:      (n) => `${n} quartos hoje`,
+    badgeRooms:      (n) => `🏨 ${n} quartos hoje`,
     toastIn:         'Entrada registrada',
     toastOut:        (n) => `Saída registrada · ${n} quartos`,
     toastNoHotel:    'Selecione o hotel',
