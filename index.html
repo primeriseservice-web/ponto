@@ -785,34 +785,6 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 
   <!-- ── TAB: CONFIG ── -->
   <div id="tab-cfg" style="display:none">
-    <div class="card" style="margin-bottom:8px">
-      <div class="field-label" id="lbl-gsheets">Google Sheets — banco de dados</div>
-      <div style="margin-bottom:8px;margin-top:12px">
-        <input type="text" id="cfg-sid" id="cfg-sid" placeholder="ID da planilha" style="font-family:'Geist Mono',monospace;font-size:12px">
-      </div>
-      <div style="margin-bottom:12px">
-        <input type="text" id="cfg-key" id="cfg-key-ph" placeholder="Chave de API Google" style="font-family:'Geist Mono',monospace;font-size:12px">
-      </div>
-      <button class="btn btn-gold" id="btn-salvar-cfg" onclick="saveCfg()" style="font-size:14px;padding:12px">Salvar</button>
-    </div>
-
-    <div class="info-box" style="margin-bottom:8px">
-      <strong>Como configurar (10 min)</strong>
-      1. console.cloud.google.com → novo projeto<br>
-      2. Ative "Google Sheets API"<br>
-      3. Credenciais → Chave de API<br>
-      4. Cole o ID da planilha e a chave acima<br>
-      5. Na planilha crie abas: <em>registros</em> e <em>funcionarios</em>
-    </div>
-
-    <div class="card" style="margin-bottom:8px">
-      <div class="field-label" id="lbl-senha-admin">Senha do admin</div>
-      <div style="margin:12px 0 12px">
-        <input type="password" id="cfg-pw" id="cfg-pw" placeholder="Nova senha">
-      </div>
-      <button class="btn btn-gold" id="btn-alterar" onclick="savePass()" style="font-size:14px;padding:12px">Alterar</button>
-    </div>
-
     <button class="btn btn-outline" id="btn-sair" onclick="adminLogout()">Sair do admin</button>
   </div>
 
@@ -855,7 +827,7 @@ const LANG = {
     passLabel:       'Senha',
     tabDaily:        'Diário',
     tabMonthly:      'Mensal',
-    tabTeam:         'Equipe',
+    tabTeam:         'Cadastro',
     tabCfg:          'Config',
     hotelFilter:     'Hotel',
     allHotels:       'Todos',
@@ -931,7 +903,7 @@ const LANG = {
     passLabel:       'パスワード',
     tabDaily:        '日次',
     tabMonthly:      '月次',
-    tabTeam:         'チーム',
+    tabTeam:         'Cadastro',
     tabCfg:          '設定',
     hotelFilter:     'ホテル',
     allHotels:       '全て',
@@ -1378,6 +1350,26 @@ function switchTab(id, btn) {
 }
 
 // ── DAILY ─────────────────────────────────────────────────
+
+// ── EMPLOYEE COLORS ──────────────────────────────────────
+const EMP_COLORS = [
+  { bg: 'rgba(212,168,67,0.12)',  border: 'rgba(212,168,67,0.5)',  text: '#d4a843' },  // gold
+  { bg: 'rgba(77,157,224,0.12)', border: 'rgba(77,157,224,0.5)',  text: '#4d9de0' },  // blue
+  { bg: 'rgba(111,184,120,0.12)',border: 'rgba(111,184,120,0.5)', text: '#6fb878' },  // green
+  { bg: 'rgba(220,100,100,0.12)',border: 'rgba(220,100,100,0.5)', text: '#dc6464' },  // red
+  { bg: 'rgba(180,120,220,0.12)',border: 'rgba(180,120,220,0.5)', text: '#b478dc' },  // purple
+  { bg: 'rgba(240,160,80,0.12)', border: 'rgba(240,160,80,0.5)',  text: '#f0a050' },  // orange
+  { bg: 'rgba(80,200,200,0.12)', border: 'rgba(80,200,200,0.5)',  text: '#50c8c8' },  // teal
+  { bg: 'rgba(220,140,180,0.12)',border: 'rgba(220,140,180,0.5)', text: '#dc8cb4' },  // pink
+];
+
+function empColor(name) {
+  // Consistent color based on employee name
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return EMP_COLORS[Math.abs(hash) % EMP_COLORS.length];
+}
+
 function renderDaily() {
   const date  = document.getElementById('rpt-date').value;
   const h     = document.getElementById('rpt-hotel').value;
@@ -1413,12 +1405,15 @@ function renderDaily() {
       const sai = r.saida   ? fmtT(r.saida)   : '<span style="color:var(--green)">aberto</span>';
       return `${ent} → ${sai}`;
     }).join('<br>');
+    const clr = empColor(g.name);
     const card = document.createElement('div');
     card.className = 'rep-card';
+    card.style.borderColor = clr.border;
+    card.style.borderLeftWidth = '4px';
     card.innerHTML = `
       <div class="rep-header">
         <div>
-          <div class="rep-name">${g.name}</div>
+          <div class="rep-name" style="color:${clr.text};font-weight:600">${g.name}</div>
           <div class="rep-hotel-tag ${g.hotel}">${g.hotel}</div>
         </div>
         <div style="text-align:right">
@@ -1457,11 +1452,14 @@ function renderMonthly() {
   list.innerHTML = '';
   Object.values(grp).sort((a,b) => a.name.localeCompare(b.name)).forEach(g => {
     const tot = g.single + g.twin + g.triple;
+    const clr = empColor(g.name);
     const card = document.createElement('div');
     card.className = 'mon-card';
+    card.style.borderColor = clr.border;
+    card.style.borderLeftWidth = '4px';
     card.innerHTML = `
       <div class="mon-header">
-        <div class="mon-name">${g.name}</div>
+        <div class="mon-name" style="color:${clr.text};font-weight:600">${g.name}</div>
         <span class="mon-hotel-pill ${g.hotel}">${g.hotel}</span>
       </div>
       <div class="mon-breakdown">
@@ -1485,10 +1483,14 @@ function renderEmpList() {
   DB.employees.forEach((e, i) => {
     const d = document.createElement('div');
     d.className = 'emp-item';
+    const ec = empColor(e.name);
+    d.style.borderLeft = '4px solid ' + ec.text;
     d.innerHTML = `
-      <div>
-        <div class="emp-item-name">${e.name}</div>
-        <div class="emp-item-sub">PIN: ${'●'.repeat(e.pin.length)}</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div>
+          <div class="emp-item-name" style="color:${ec.text}">${e.name}</div>
+          <div class="emp-item-sub">PIN: ${'●'.repeat(e.pin.length)}</div>
+        </div>
       </div>
       <button class="del-emp" onclick="removeEmp(${i})">✕</button>`;
     list.appendChild(d);
