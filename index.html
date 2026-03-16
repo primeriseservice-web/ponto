@@ -621,29 +621,9 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 /* ── LOGO FIELD ── */
 .field-label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 6px; }
 
-.lang-switcher {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-.lang-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--muted);
-  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 7px;
-  cursor: pointer;
-  transition: all .18s;
-  letter-spacing: 0.3px;
-}
-.lang-btn.active {
-  background: var(--gold);
-  color: #08080a;
-  border-color: var(--gold);
-}
+
+
+
 
 </style>
 </head>
@@ -845,7 +825,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 <!-- ═══ SCRIPT ═══ -->
 <script>
 // ═══════════════════════════════════════════════
-// i18n — Multilingual support (PT-BR / 日本語)
+// i18n — PT-BR
 // ═══════════════════════════════════════════════
 const LANG = {
   pt: {
@@ -1008,8 +988,7 @@ function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('lang', lang);
   try {
-    document.getElementById('lb-pt').classList.toggle('active', lang === 'pt');
-    document.getElementById('lb-ja').classList.toggle('active', lang === 'ja');
+
   } catch(e) {}
   if (domReady) applyLang();
 }
