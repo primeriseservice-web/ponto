@@ -914,7 +914,7 @@ function tick() {
   const cd = document.getElementById('ck-date');
   if (cd) cd.textContent = dt.charAt(0).toUpperCase() + dt.slice(1);
 }
-setInterval(tick, 1000); tick();
+setInterval(tick, 1000);
 
 // ── ROUTING ──────────────────────────────────────────────
 function showScreen(n) {
@@ -1542,11 +1542,12 @@ function applyLang() {
     initAdmin();
   }
   // Refresh clock text immediately
-  updateClock();
+  tick();
 }
 
 // Call applyLang after DOM ready
 document.addEventListener('DOMContentLoaded', () => {
+  tick();
   setLang(currentLang);
 });
 
