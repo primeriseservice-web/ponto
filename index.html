@@ -1034,6 +1034,22 @@ const save = k => {
   S.set(map[k], DB[k]);
 };
 
+
+// ── HELPERS ───────────────────────────────────────────────
+function calcHours(entrada, saida) {
+  if (!entrada || !saida) return '';
+  const diff = new Date(saida) - new Date(entrada);
+  if (diff <= 0) return '0:00';
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return h + ':' + String(m).padStart(2, '0');
+}
+function calcHoursDecimal(entrada, saida) {
+  if (!entrada || !saida) return 0;
+  const diff = new Date(saida) - new Date(entrada);
+  return Math.max(0, diff / 3600000);
+}
+
 // ── CLOCK ─────────────────────────────────────────────────
 function updateClock() { tick(); }
 function tick() {
@@ -1149,34 +1165,44 @@ function goToEmployee() {
 // ── PONTO SCREEN ─────────────────────────────────────────
 function initPonto() {
   document.getElementById('pt-name').textContent = cur.name;
-  const open = getOpen();
+  const open   = getOpen();
+  const closed = getClosed();
+
+  // Hotel label
+  const hotelLbl = document.getElementById('pt-hotel-label');
+  if (hotelLbl) hotelLbl.textContent = 'Hotel: Kinuura';
 
   if (open) {
+    // Em turno — mostrar saída
     hotel = open.hotel;
     Q = { single: open.single || 0, twin: open.twin || 0, triple: open.triple || 0 };
     document.getElementById('hotel-picker').style.display = 'none';
     setHotelTag(open.hotel);
-    setPunchBtn(true);
-    const hotelLblOpen = document.getElementById('pt-hotel-label');
-    if (hotelLblOpen) hotelLblOpen.textContent = 'Hotel: Kinuura';
+    setPunchBtn('out');
+  } else if (closed) {
+    // Já saiu hoje — contadores editáveis, botão desabilitado
+    hotel = closed.hotel;
+    Q = { single: closed.single || 0, twin: closed.twin || 0, triple: closed.triple || 0 };
+    document.getElementById('hotel-picker').style.display = 'none';
+    setHotelTag(closed.hotel);
+    setPunchBtn('done');
   } else {
-    // Auto-select Kinuura
+    // Ainda não entrou
     hotel = 'kinuura';
     document.getElementById('hotel-picker').style.display = 'none';
     document.getElementById('pt-hotel-tag').style.display = 'none';
-    setPunchBtn(false);
+    setPunchBtn('in');
   }
-  // Show hotel name below employee name
-  const hotelLbl = document.getElementById('pt-hotel-label');
-  if (hotelLbl) hotelLbl.textContent = 'Hotel: Kinuura';
 
   renderQRows();
   renderTotals();
 
   const ht = document.getElementById('header-tag');
-  if (open) { ht.textContent = open.hotel; ht.className = 'hotel-tag ' + open.hotel; ht.style.display = 'block'; }
+  const rec = open || closed;
+  if (rec) { ht.textContent = rec.hotel; ht.className = 'hotel-tag ' + rec.hotel; ht.style.display = 'block'; }
   else ht.style.display = 'none';
 }
+
 
 function setHotelTag(h) {
   const hotelTagEl = document.getElementById('pt-hotel-tag');
@@ -1185,13 +1211,30 @@ function setHotelTag(h) {
 
 function setStatus(on, entradaISO) { /* status display removed */ }
 
-function setPunchBtn(isIn) {
+function setPunchBtn(state) {
   const b = document.getElementById('punch-btn');
-  b.textContent = isIn ? t('labelSaida') : t('labelEntrada');
-  b.className = 'btn ' + (isIn ? 'btn-danger' : 'btn-gold');
+  if (state === 'in') {
+    b.textContent = t('labelEntrada');
+    b.className = 'btn btn-gold';
+    b.disabled = false;
+  } else if (state === 'out') {
+    b.textContent = t('labelSaida');
+    b.className = 'btn btn-danger';
+    b.disabled = false;
+  } else {
+    b.textContent = 'Ponto encerrado hoje';
+    b.className = 'btn btn-outline';
+    b.disabled = true;
+  }
 }
 
+
 function openRecord() { return getOpen(); }
+
+function getClosed() {
+  return DB.records.find(r => r.empIdx === cur.idx && r.date === today() && r.saida);
+}
+
 function getOpen() {
   return DB.records.find(r => r.empIdx === cur.idx && r.date === today() && !r.saida);
 }
@@ -1227,16 +1270,28 @@ function renderQRows() {
   });
 }
 
-function chQ(type, d) {
-  Q[type] = Math.max(0, Q[type] + d);
-  const el = document.getElementById('qn-' + type);
-  el.textContent = Q[type];
-  el.className = 'q-num' + (Q[type] > 0 ? ' lit' : '');
+function chQ(key, delta) {
+  Q[key] = Math.max(0, (Q[key] || 0) + delta);
+  const el = document.getElementById('qn-' + key);
+  if (el) {
+    el.textContent = Q[key];
+    el.className = 'q-num' + (Q[key] > 0 ? ' lit' : '');
+  }
   renderTotals();
-  // Live-save
-  const i = DB.records.findIndex(r => r.empIdx === cur.idx && r.date === today() && !r.saida);
-  if (i !== -1) { DB.records[i].single = Q.single; DB.records[i].twin = Q.twin; DB.records[i].triple = Q.triple; save('records'); }
+  // Save to record (open OR closed)
+  const rec = getOpen() || getClosed();
+  if (rec) {
+    const i = DB.records.findIndex(r => r.id === rec.id);
+    if (i > -1) {
+      DB.records[i].single = Q.single;
+      DB.records[i].twin   = Q.twin;
+      DB.records[i].triple = Q.triple;
+      save('records');
+      pushRecordUpdate(DB.records[i]);
+    }
+  }
 }
+
 
 function renderTotals() {
   ['s','t','tr'].forEach((k, i) => {
@@ -1248,9 +1303,12 @@ function renderTotals() {
 }
 
 function punch() {
-  const open = getOpen();
-  if (!open) {
-    if (!hotel) { toast(t('toastNoHotel'), 'err'); return; }
+  if (!hotel) { toast(t('toastNoHotel'), 'err'); return; }
+  const open   = getOpen();
+  const closed = getClosed();
+
+  if (!open && !closed) {
+    // Primeira entrada do dia
     const rec = {
       id: Date.now() + '',
       empIdx: cur.idx, name: cur.name, empName: cur.name,
@@ -1262,7 +1320,8 @@ function punch() {
     save('records');
     pushRecord(rec);
     toast(t('toastIn'), 'ok');
-  } else {
+  } else if (open && !closed) {
+    // Registrar saída
     const i = DB.records.findIndex(r => r.id === open.id);
     DB.records[i].saida  = nowISO();
     DB.records[i].single = Q.single;
@@ -1272,9 +1331,14 @@ function punch() {
     save('records');
     pushRecordUpdate(DB.records[i]);
     toast(t('toastOut', tot), 'ok');
+  } else {
+    // Já completou entrada e saída hoje
+    toast('Ponto já registrado hoje', 'err');
+    return;
   }
   initPonto();
 }
+
 
 function goBack() { cur = null; hotel = null; showScreen('select'); }
 
@@ -1319,6 +1383,23 @@ function empColor(name) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return EMP_COLORS[Math.abs(hash) % EMP_COLORS.length];
+}
+
+
+// ── CÁLCULO DE HORAS ──────────────────────────────────────
+function calcHours(entrada, saida) {
+  if (!entrada || !saida) return '';
+  const diff = new Date(saida) - new Date(entrada);
+  if (diff <= 0) return '';
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+function calcHoursDecimal(entrada, saida) {
+  if (!entrada || !saida) return 0;
+  const diff = new Date(saida) - new Date(entrada);
+  if (diff <= 0) return 0;
+  return Math.round(diff / 3600000 * 100) / 100;
 }
 
 function renderDaily() {
@@ -1394,10 +1475,14 @@ function renderMonthly() {
   const grp = {};
   recs.forEach(r => {
     const k = (r.empName||r.name||'?') + '__' + r.hotel;
-    if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single: 0, twin: 0, triple: 0 };
+    if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single: 0, twin: 0, triple: 0, totalMinutes: 0 };
     grp[k].single  += (r.single  || 0);
     grp[k].twin    += (r.twin    || 0);
     grp[k].triple  += (r.triple  || 0);
+    if (r.entrada && r.saida) {
+      const mins = Math.round((new Date(r.saida) - new Date(r.entrada)) / 60000);
+      if (mins > 0) grp[k].totalMinutes += mins;
+    }
   });
 
   list.innerHTML = '';
@@ -1484,11 +1569,14 @@ function exportCSV(type) {
     const date = document.getElementById('rpt-date').value;
     rows = DB.records.filter(r => r.date === date);
     name = 'ponto-' + date + '.csv';
-    hdr  = 'Data;Nome;Entrada;Saída;Single;Double;Triple;TOTAL\n';
+    hdr  = 'Data;Nome;Horas;Entrada;Saída;Single;Double;Triple;Total Quartos\n';
     body = rows.map(r => {
-      const tot = (r.single||0)+(r.twin||0)+(r.triple||0);
-      const nm  = r.empName||r.name||'?';
-      return `"${r.date}";"${nm}";"${r.entrada?fmtT(r.entrada):''}";"${r.saida?fmtT(r.saida):'aberto'}";"${r.single||0}";"${r.twin||0}";"${r.triple||0}";"${tot}"`;
+      const tot   = (r.single||0)+(r.twin||0)+(r.triple||0);
+      const nm    = r.empName||r.name||'?';
+      const horas = calcHours(r.entrada, r.saida);
+      const ent   = r.entrada ? fmtT(r.entrada) : '';
+      const sai   = r.saida   ? fmtT(r.saida)   : 'aberto';
+      return `"${r.date}";"${nm}";"${horas}";"${ent}";"${sai}";"${r.single||0}";"${r.twin||0}";"${r.triple||0}";"${tot}"`;
     }).join('\n');
   } else {
     const month = document.getElementById('rpt-month').value;
@@ -1500,12 +1588,25 @@ function exportCSV(type) {
       if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single:0, twin:0, triple:0 };
       grp[k].single+=(r.single||0); grp[k].twin+=(r.twin||0); grp[k].triple+=(r.triple||0);
     });
-    hdr  = 'Nome;Single;Double;Triple;TOTAL\n';
-    body = Object.values(grp).map(g => `"${g.name}";"${g.single}";"${g.twin}";"${g.triple}";"${g.single+g.twin+g.triple}"`).join('\n');
+    // Calcular total de horas por funcionário no mês
+    const grpHours = {};
+    rows.forEach(r => {
+      const k = r.empName||r.name||'?';
+      if (!grpHours[k]) grpHours[k] = 0;
+      if (r.entrada && r.saida) {
+        grpHours[k] += new Date(r.saida) - new Date(r.entrada);
+      }
+    });
+    hdr  = 'Nome;Single;Double;Triple;Total Quartos;Total Horas\n';
+    body = Object.values(grp).map(g => {
+      const ms = grpHours[g.name] || 0;
+      const th = ms > 0 ? String(Math.floor(ms/3600000)).padStart(2,'0') + ':' + String(Math.floor((ms%3600000)/60000)).padStart(2,'0') : '';
+      return `"${g.name}";"${g.single}";"${g.twin}";"${g.triple}";"${g.single+g.twin+g.triple}";"${th}"`;
+    }).join('\n');
   }
   if (!body.trim()) { toast('Sem dados', 'err'); return; }
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([hdr+body], { type: 'text/csv;charset=utf-8;' }));
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+hdr+body], { type: 'text/csv;charset=utf-8;' }));
   a.download = name; a.click();
 }
 
