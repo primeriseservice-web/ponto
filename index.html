@@ -274,48 +274,18 @@ select option { background: #1e1e23; color: var(--text); }
 
 /* ── HOTEL CARDS ── */
 .hotel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.hotel-pick {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 18px 16px;
-  cursor: pointer;
-  transition: all 0.2s var(--ease);
-  text-align: left;
-  position: relative;
-  overflow: hidden;
-}
-.hotel-pick::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.hotel-pick:active { transform: scale(0.97); }
-.hotel-pick .h-name {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 18px;
-  font-weight: 400;
-  margin-bottom: 2px;
-}
-.hotel-pick .h-sub { font-size: 11px; color: var(--muted2); }
-.hotel-pick .h-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  margin-bottom: 10px;
-  background: var(--muted);
-  transition: background 0.2s;
-}
 
-.hotel-pick.kinuura .h-dot  { background: var(--gold); }
-.hotel-pick.kinuura.sel     { border-color: rgba(212,168,67,0.4); background: var(--gold-dim); }
-.hotel-pick.kinuura.sel .h-name { color: var(--gold); }
 
-.hotel-pick.shinsuma .h-dot { background: var(--blue); }
+
+
+
+
+
+
+
+
 .hotel-pick.shinsuma.sel    { border-color: rgba(77,157,224,0.35); background: var(--blue-dim); }
-.hotel-pick.shinsuma.sel .h-name { color: var(--blue); }
+.hotel-pick.shinsuma.sel 
 
 /* ── QUARTO ROWS ── */
 .quarto-list { display: flex; flex-direction: column; gap: 0; }
@@ -384,31 +354,16 @@ select option { background: #1e1e23; color: var(--text); }
 .tot-label { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; }
 
 /* ── STATUS ROW ── */
-.status-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-.status-pip {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--muted);
-  flex-shrink: 0;
-  transition: all 0.3s;
-}
-.status-pip.on {
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-  animation: pip-pulse 2s ease infinite;
-}
+
+
+
 @keyframes pip-pulse {
   0%,100% { box-shadow: 0 0 4px var(--green); }
   50%      { box-shadow: 0 0 10px var(--green); }
 }
-.status-txt { color: var(--muted2); }
+
 .status-txt.on { color: var(--green); }
-.status-time { margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
+
 
 /* ── BUTTONS ── */
 .btn {
@@ -1017,9 +972,6 @@ function applyLang() {
   const phMap = {
     'inp-nome':    L.namePlaceholder,
     'inp-pin-lbl': L.pinPlaceholder,
-    'cfg-sid':     L.labelSheetId,
-    'cfg-key':     L.labelApiKey,
-    'cfg-pw':      L.labelNovaSenha,
   };
   Object.entries(phMap).forEach(([id, ph]) => {
     const el = document.getElementById(id);
@@ -1050,7 +1002,7 @@ function applyLang() {
   const hotelLbl = document.getElementById('pt-hotel-label');
   if (hotelLbl && hotelLbl.textContent) hotelLbl.textContent = L.labelHotelKin;
 
-  try { if (document.getElementById('admin').classList.contains('active')) { initAdmin(); } } catch(e) {}
+  try { if (document.getElementById('screen-admin').classList.contains('active')) { initAdmin(); } } catch(e) {}
   tick();
 }
 
@@ -1083,6 +1035,7 @@ const save = k => {
 };
 
 // ── CLOCK ─────────────────────────────────────────────────
+function updateClock() { tick(); }
 function tick() {
   try {
     const n = new Date();
@@ -1226,17 +1179,11 @@ function initPonto() {
 }
 
 function setHotelTag(h) {
-  const t = document.getElementById('pt-hotel-tag');
-  t.textContent = h; t.className = 'hotel-tag ' + h; t.style.display = 'block';
+  const hotelTagEl = document.getElementById('pt-hotel-tag');
+  hotelTagEl.textContent = h; hotelTagEl.className = 'hotel-tag ' + h; hotelTagEl.style.display = 'block';
 }
 
-function setStatus(on, entradaISO) {
-  document.getElementById('st-pip').className = 'status-pip' + (on ? ' on' : '');
-  const txt = document.getElementById('st-txt');
-  txt.className = 'status-txt' + (on ? ' on' : '');
-  txt.textContent = on ? 'em turno' : 'fora do turno';
-  document.getElementById('st-time').textContent = on && entradaISO ? 'desde ' + fmtT(entradaISO) : '';
-}
+function setStatus(on, entradaISO) { /* status display removed */ }
 
 function setPunchBtn(isIn) {
   const b = document.getElementById('punch-btn');
@@ -1244,6 +1191,7 @@ function setPunchBtn(isIn) {
   b.className = 'btn ' + (isIn ? 'btn-danger' : 'btn-gold');
 }
 
+function openRecord() { return getOpen(); }
 function getOpen() {
   return DB.records.find(r => r.empIdx === cur.idx && r.date === today() && !r.saida);
 }
@@ -1345,10 +1293,10 @@ function initAdmin() {
 }
 
 function switchTab(id, btn) {
-  ['tab-daily','tab-monthly','tab-team','tab-cfg'].forEach(t => {
-    document.getElementById(t).style.display = t === id ? 'block' : 'none';
+  ['tab-daily','tab-monthly','tab-team','tab-cfg'].forEach(tabId => {
+    document.getElementById(tabId).style.display = t === id ? 'block' : 'none';
   });
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
   btn.classList.add('active');
 }
 
@@ -1393,8 +1341,8 @@ function renderDaily() {
 
   const grp = {};
   recs.forEach(r => {
-    const k = r.empName + '__' + r.hotel;
-    if (!grp[k]) grp[k] = { name: r.empName, hotel: r.hotel, recs: [] };
+    const k = (r.empName||r.name||'?') + '__' + r.hotel;
+    if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, recs: [] };
     grp[k].recs.push(r);
   });
 
@@ -1445,8 +1393,8 @@ function renderMonthly() {
 
   const grp = {};
   recs.forEach(r => {
-    const k = r.empName + '__' + r.hotel;
-    if (!grp[k]) grp[k] = { name: r.empName, hotel: r.hotel, single: 0, twin: 0, triple: 0 };
+    const k = (r.empName||r.name||'?') + '__' + r.hotel;
+    if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single: 0, twin: 0, triple: 0 };
     grp[k].single  += (r.single  || 0);
     grp[k].twin    += (r.twin    || 0);
     grp[k].triple  += (r.triple  || 0);
@@ -1525,20 +1473,9 @@ function removeEmp(i) {
 }
 
 // ── CONFIG ────────────────────────────────────────────────
-function saveCfg() {
-  DB.sheetId = document.getElementById('cfg-sid').value.trim();
-  DB.apiKey  = document.getElementById('cfg-key').value.trim();
-  save('sheetId'); save('apiKey');
-  toast('Salvo', 'ok');
-}
+function saveCfg() { /* config UI removed */ }
 
-function savePass() {
-  const p = document.getElementById('cfg-pw').value;
-  if (p.length < 4) { toast(t('toastPassShort'), 'err'); return; }
-  DB.adminPass = p; save('adminPass');
-  document.getElementById('cfg-pw').value = '';
-  toast(t('toastPassOk'), 'ok');
-}
+function savePass() { /* password UI removed */ }
 
 // ── CSV EXPORT ────────────────────────────────────────────
 function exportCSV(type) {
@@ -1547,10 +1484,11 @@ function exportCSV(type) {
     const date = document.getElementById('rpt-date').value;
     rows = DB.records.filter(r => r.date === date);
     name = 'ponto-' + date + '.csv';
-    hdr  = 'Nome,Hotel,Data,Entrada,Saida,Single,Twin,Triple,Total\n';
+    hdr  = 'Data;Nome;Entrada;Saída;Single;Double;Triple;TOTAL\n';
     body = rows.map(r => {
       const tot = (r.single||0)+(r.twin||0)+(r.triple||0);
-      return `"${r.empName}","${r.hotel}","${r.date}","${r.entrada?fmtT(r.entrada):''}","${r.saida?fmtT(r.saida):'aberto'}","${r.single||0}","${r.twin||0}","${r.triple||0}","${tot}"`;
+      const nm  = r.empName||r.name||'?';
+      return `"${r.date}";"${nm}";"${r.entrada?fmtT(r.entrada):''}";"${r.saida?fmtT(r.saida):'aberto'}";"${r.single||0}";"${r.twin||0}";"${r.triple||0}";"${tot}"`;
     }).join('\n');
   } else {
     const month = document.getElementById('rpt-month').value;
@@ -1558,12 +1496,12 @@ function exportCSV(type) {
     name = 'ponto-mensal-' + month + '.csv';
     const grp = {};
     rows.forEach(r => {
-      const k = r.empName + '__' + r.hotel;
-      if (!grp[k]) grp[k] = { name: r.empName, hotel: r.hotel, single:0, twin:0, triple:0 };
+      const k = (r.empName||r.name||'?') + '__' + r.hotel;
+      if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single:0, twin:0, triple:0 };
       grp[k].single+=(r.single||0); grp[k].twin+=(r.twin||0); grp[k].triple+=(r.triple||0);
     });
-    hdr  = 'Nome,Hotel,Single,Twin,Triple,Total\n';
-    body = Object.values(grp).map(g => `"${g.name}","${g.hotel}","${g.single}","${g.twin}","${g.triple}","${g.single+g.twin+g.triple}"`).join('\n');
+    hdr  = 'Nome;Single;Double;Triple;TOTAL\n';
+    body = Object.values(grp).map(g => `"${g.name}";"${g.single}";"${g.twin}";"${g.triple}";"${g.single+g.twin+g.triple}"`).join('\n');
   }
   if (!body.trim()) { toast('Sem dados', 'err'); return; }
   const a = document.createElement('a');
@@ -1574,7 +1512,7 @@ function exportCSV(type) {
 // ── TOAST ─────────────────────────────────────────────────
 let toastTimer;
 function toast(msg, type = '') {
-  const t = document.getElementById('toast');
+  const toastEl = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast' + (type ? ' ' + type : '');
   void t.offsetWidth;
