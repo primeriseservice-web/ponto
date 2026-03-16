@@ -887,6 +887,194 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 
 <!-- ═══ SCRIPT ═══ -->
 <script>
+// ═══════════════════════════════════════════════
+// i18n — Multilingual support (PT-BR / 日本語)
+// ═══════════════════════════════════════════════
+const LANG = {
+  pt: {
+    selectName:      'Selecione seu nome…',
+    pinLabel:        'PIN',
+    hotelLabel:      'Hotel de hoje',
+    hotelPrincipal:  'Hotel principal',
+    hotelPequeno:    'Hotel pequeno',
+    roomsLabel:      'Quartos limpos',
+    singleSub:       'quarto simples',
+    twinSub:         'duas camas',
+    tripleSub:       'três camas',
+    punchIn:         'Registrar Entrada',
+    punchOut:        'Registrar Saída',
+    badgeRooms:      (n) => `${n} quartos hoje`,
+    toastIn:         'Entrada registrada',
+    toastOut:        (n) => `Saída registrada · ${n} quartos`,
+    toastNoHotel:    'Selecione o hotel',
+    toastPinErr:     'PIN incorreto',
+    toastPinLen:     'PIN: 4 dígitos',
+    toastPinUsed:    'PIN já em uso',
+    toastPassShort:  'Senha muito curta',
+    toastPassOk:     'Senha alterada',
+    toastPassErr:    'Senha incorreta',
+    toastCfgSaved:   'Configurações salvas',
+    adminTitle:      'Área Admin',
+    passLabel:       'Senha',
+    tabDaily:        'Diário',
+    tabMonthly:      'Mensal',
+    tabTeam:         'Equipe',
+    tabCfg:          'Config',
+    hotelFilter:     'Hotel',
+    allHotels:       'Todos',
+    exportCSV:       '↓ Exportar CSV',
+    newEmployee:     'Novo funcionário',
+    namePlaceholder: 'Nome completo',
+    pinPlaceholder:  'PIN (4 dígitos)',
+    addBtn:          'Adicionar',
+    saveBtn:         'Salvar',
+    removeConfirm:   (name) => `Remover ${name}?`,
+    noEmployees:     'Nenhum funcionário cadastrado.',
+    noRecordsDay:    'Nenhum registro nesta data.',
+    noRecordsMon:    'Nenhum registro neste mês.',
+    totalRooms:      'quartos',
+    totalMonth:      'total do mês',
+    cfgTitle:        'Google Sheets — banco de dados',
+    cfgSidPh:        'ID da planilha',
+    cfgKeyPh:        'Chave de API Google',
+    cfgPassLabel:    'Senha do admin',
+    cfgPassPh:       'Nova senha',
+    locale:          'pt-BR',
+  },
+  ja: {
+    selectName:      '名前を選んでください…',
+    pinLabel:        'PIN',
+    hotelLabel:      '本日のホテル',
+    hotelPrincipal:  'メインホテル',
+    hotelPequeno:    'サブホテル',
+    roomsLabel:      '清掃済み客室',
+    singleSub:       'シングルルーム',
+    twinSub:         'ツインルーム',
+    tripleSub:       'トリプルルーム',
+    punchIn:         '出勤登録',
+    punchOut:        '退勤登録',
+    badgeRooms:      (n) => `本日 ${n} 室`,
+    toastIn:         '出勤を登録しました',
+    toastOut:        (n) => `退勤登録 · ${n} 室`,
+    toastNoHotel:    'ホテルを選択してください',
+    toastPinErr:     'PINが間違っています',
+    toastPinLen:     'PIN：4桁で入力してください',
+    toastPinUsed:    'このPINは既に使用されています',
+    toastPassShort:  'パスワードが短すぎます',
+    toastPassOk:     'パスワードを変更しました',
+    toastPassErr:    'パスワードが間違っています',
+    toastCfgSaved:   '設定を保存しました',
+    adminTitle:      '管理エリア',
+    passLabel:       'パスワード',
+    tabDaily:        '日次',
+    tabMonthly:      '月次',
+    tabTeam:         'チーム',
+    tabCfg:          '設定',
+    hotelFilter:     'ホテル',
+    allHotels:       '全て',
+    exportCSV:       '↓ CSVエクスポート',
+    newEmployee:     '新しいスタッフ',
+    namePlaceholder: 'フルネーム',
+    pinPlaceholder:  'PIN（4桁）',
+    addBtn:          '追加',
+    saveBtn:         '保存',
+    removeConfirm:   (name) => `${name} を削除しますか？`,
+    noEmployees:     'スタッフが登録されていません。',
+    noRecordsDay:    'この日の記録はありません。',
+    noRecordsMon:    'この月の記録はありません。',
+    totalRooms:      '室',
+    totalMonth:      '月合計',
+    cfgTitle:        'Google Sheets — データベース',
+    cfgSidPh:        'スプレッドシートID',
+    cfgKeyPh:        'Google APIキー',
+    cfgPassLabel:    '管理者パスワード',
+    cfgPassPh:       '新しいパスワード',
+    locale:          'ja-JP',
+  }
+};
+
+let currentLang = localStorage.getItem('lang') || 'pt';
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.getElementById('lb-pt').classList.toggle('active', lang === 'pt');
+  document.getElementById('lb-ja').classList.toggle('active', lang === 'ja');
+  applyLang();
+}
+
+function t(key, ...args) {
+  const val = LANG[currentLang][key];
+  return typeof val === 'function' ? val(...args) : (val ?? key);
+}
+
+function applyLang() {
+  const L = LANG[currentLang];
+  // html lang attr
+  document.documentElement.lang = currentLang === 'ja' ? 'ja' : 'pt-BR';
+
+  // Select name dropdown placeholder
+  const sel = document.getElementById('emp-select');
+  if (sel && sel.options[0]) sel.options[0].text = L.selectName;
+
+  // Section labels
+  const labels = {
+    'pin-label':     L.pinLabel,
+    'hotel-label':   L.hotelLabel,
+    'rooms-label':   L.roomsLabel,
+  };
+  Object.entries(labels).forEach(([id, txt]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  });
+
+  // Hotel subtitles
+  const hSubKin = document.getElementById('h-sub-kinuura');
+  const hSubShi = document.getElementById('h-sub-shinsuma');
+  if (hSubKin) hSubKin.textContent = L.hotelPrincipal;
+  if (hSubShi) hSubShi.textContent = L.hotelPequeno;
+
+  // Room counter subs
+  document.querySelectorAll('.room-sub').forEach(el => {
+    const key = el.dataset.sub;
+    if (key) el.textContent = L[key] ?? el.textContent;
+  });
+
+  // Punch button
+  const punchBtn = document.getElementById('punch-btn');
+  if (punchBtn) {
+    const isIn = !!openRecord();
+    punchBtn.textContent = isIn ? L.punchOut : L.punchIn;
+  }
+
+  // Admin tabs
+  const tabMap = {
+    'tab-btn-daily':   L.tabDaily,
+    'tab-btn-monthly': L.tabMonthly,
+    'tab-btn-team':    L.tabTeam,
+    'tab-btn-cfg':     L.tabCfg,
+  };
+  Object.entries(tabMap).forEach(([id, txt]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  });
+
+  // Re-render select dropdown
+  initSelect();
+  // Re-render admin if open
+  if (document.getElementById('admin').classList.contains('active')) {
+    initAdmin();
+  }
+  // Refresh clock text immediately
+  tick();
+}
+
+// Call applyLang after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  tick();
+  setLang(currentLang);
+});
+
 // ── STORAGE ──────────────────────────────────────────────
 const S = {
   get: (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
@@ -1375,193 +1563,7 @@ function toast(msg, type = '') {
 // ── INIT ─────────────────────────────────────────────────
 initSelect();
 
-// ═══════════════════════════════════════════════
-// i18n — Multilingual support (PT-BR / 日本語)
-// ═══════════════════════════════════════════════
-const LANG = {
-  pt: {
-    selectName:      'Selecione seu nome…',
-    pinLabel:        'PIN',
-    hotelLabel:      'Hotel de hoje',
-    hotelPrincipal:  'Hotel principal',
-    hotelPequeno:    'Hotel pequeno',
-    roomsLabel:      'Quartos limpos',
-    singleSub:       'quarto simples',
-    twinSub:         'duas camas',
-    tripleSub:       'três camas',
-    punchIn:         'Registrar Entrada',
-    punchOut:        'Registrar Saída',
-    badgeRooms:      (n) => `${n} quartos hoje`,
-    toastIn:         'Entrada registrada',
-    toastOut:        (n) => `Saída registrada · ${n} quartos`,
-    toastNoHotel:    'Selecione o hotel',
-    toastPinErr:     'PIN incorreto',
-    toastPinLen:     'PIN: 4 dígitos',
-    toastPinUsed:    'PIN já em uso',
-    toastPassShort:  'Senha muito curta',
-    toastPassOk:     'Senha alterada',
-    toastPassErr:    'Senha incorreta',
-    toastCfgSaved:   'Configurações salvas',
-    adminTitle:      'Área Admin',
-    passLabel:       'Senha',
-    tabDaily:        'Diário',
-    tabMonthly:      'Mensal',
-    tabTeam:         'Equipe',
-    tabCfg:          'Config',
-    hotelFilter:     'Hotel',
-    allHotels:       'Todos',
-    exportCSV:       '↓ Exportar CSV',
-    newEmployee:     'Novo funcionário',
-    namePlaceholder: 'Nome completo',
-    pinPlaceholder:  'PIN (4 dígitos)',
-    addBtn:          'Adicionar',
-    saveBtn:         'Salvar',
-    removeConfirm:   (name) => `Remover ${name}?`,
-    noEmployees:     'Nenhum funcionário cadastrado.',
-    noRecordsDay:    'Nenhum registro nesta data.',
-    noRecordsMon:    'Nenhum registro neste mês.',
-    totalRooms:      'quartos',
-    totalMonth:      'total do mês',
-    cfgTitle:        'Google Sheets — banco de dados',
-    cfgSidPh:        'ID da planilha',
-    cfgKeyPh:        'Chave de API Google',
-    cfgPassLabel:    'Senha do admin',
-    cfgPassPh:       'Nova senha',
-    locale:          'pt-BR',
-  },
-  ja: {
-    selectName:      '名前を選んでください…',
-    pinLabel:        'PIN',
-    hotelLabel:      '本日のホテル',
-    hotelPrincipal:  'メインホテル',
-    hotelPequeno:    'サブホテル',
-    roomsLabel:      '清掃済み客室',
-    singleSub:       'シングルルーム',
-    twinSub:         'ツインルーム',
-    tripleSub:       'トリプルルーム',
-    punchIn:         '出勤登録',
-    punchOut:        '退勤登録',
-    badgeRooms:      (n) => `本日 ${n} 室`,
-    toastIn:         '出勤を登録しました',
-    toastOut:        (n) => `退勤登録 · ${n} 室`,
-    toastNoHotel:    'ホテルを選択してください',
-    toastPinErr:     'PINが間違っています',
-    toastPinLen:     'PIN：4桁で入力してください',
-    toastPinUsed:    'このPINは既に使用されています',
-    toastPassShort:  'パスワードが短すぎます',
-    toastPassOk:     'パスワードを変更しました',
-    toastPassErr:    'パスワードが間違っています',
-    toastCfgSaved:   '設定を保存しました',
-    adminTitle:      '管理エリア',
-    passLabel:       'パスワード',
-    tabDaily:        '日次',
-    tabMonthly:      '月次',
-    tabTeam:         'チーム',
-    tabCfg:          '設定',
-    hotelFilter:     'ホテル',
-    allHotels:       '全て',
-    exportCSV:       '↓ CSVエクスポート',
-    newEmployee:     '新しいスタッフ',
-    namePlaceholder: 'フルネーム',
-    pinPlaceholder:  'PIN（4桁）',
-    addBtn:          '追加',
-    saveBtn:         '保存',
-    removeConfirm:   (name) => `${name} を削除しますか？`,
-    noEmployees:     'スタッフが登録されていません。',
-    noRecordsDay:    'この日の記録はありません。',
-    noRecordsMon:    'この月の記録はありません。',
-    totalRooms:      '室',
-    totalMonth:      '月合計',
-    cfgTitle:        'Google Sheets — データベース',
-    cfgSidPh:        'スプレッドシートID',
-    cfgKeyPh:        'Google APIキー',
-    cfgPassLabel:    '管理者パスワード',
-    cfgPassPh:       '新しいパスワード',
-    locale:          'ja-JP',
-  }
-};
 
-let currentLang = localStorage.getItem('lang') || 'pt';
-
-function setLang(lang) {
-  currentLang = lang;
-  localStorage.setItem('lang', lang);
-  document.getElementById('lb-pt').classList.toggle('active', lang === 'pt');
-  document.getElementById('lb-ja').classList.toggle('active', lang === 'ja');
-  applyLang();
-}
-
-function t(key, ...args) {
-  const val = LANG[currentLang][key];
-  return typeof val === 'function' ? val(...args) : (val ?? key);
-}
-
-function applyLang() {
-  const L = LANG[currentLang];
-  // html lang attr
-  document.documentElement.lang = currentLang === 'ja' ? 'ja' : 'pt-BR';
-
-  // Select name dropdown placeholder
-  const sel = document.getElementById('emp-select');
-  if (sel && sel.options[0]) sel.options[0].text = L.selectName;
-
-  // Section labels
-  const labels = {
-    'pin-label':     L.pinLabel,
-    'hotel-label':   L.hotelLabel,
-    'rooms-label':   L.roomsLabel,
-  };
-  Object.entries(labels).forEach(([id, txt]) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = txt;
-  });
-
-  // Hotel subtitles
-  const hSubKin = document.getElementById('h-sub-kinuura');
-  const hSubShi = document.getElementById('h-sub-shinsuma');
-  if (hSubKin) hSubKin.textContent = L.hotelPrincipal;
-  if (hSubShi) hSubShi.textContent = L.hotelPequeno;
-
-  // Room counter subs
-  document.querySelectorAll('.room-sub').forEach(el => {
-    const key = el.dataset.sub;
-    if (key) el.textContent = L[key] ?? el.textContent;
-  });
-
-  // Punch button
-  const punchBtn = document.getElementById('punch-btn');
-  if (punchBtn) {
-    const isIn = !!openRecord();
-    punchBtn.textContent = isIn ? L.punchOut : L.punchIn;
-  }
-
-  // Admin tabs
-  const tabMap = {
-    'tab-btn-daily':   L.tabDaily,
-    'tab-btn-monthly': L.tabMonthly,
-    'tab-btn-team':    L.tabTeam,
-    'tab-btn-cfg':     L.tabCfg,
-  };
-  Object.entries(tabMap).forEach(([id, txt]) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = txt;
-  });
-
-  // Re-render select dropdown
-  initSelect();
-  // Re-render admin if open
-  if (document.getElementById('admin').classList.contains('active')) {
-    initAdmin();
-  }
-  // Refresh clock text immediately
-  tick();
-}
-
-// Call applyLang after DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  tick();
-  setLang(currentLang);
-});
 
 </script>
 </body>
