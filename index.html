@@ -156,13 +156,14 @@ body {
   
 }
 .clock-time {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Oswald', -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
   font-size: 72px;
-  font-weight: 600;
-  letter-spacing: 2px;
+  font-weight: 700;
+  letter-spacing: 3px;
   line-height: 1;
   color: var(--text);
   margin-bottom: 10px;
+  font-variant-numeric: tabular-nums;
 }
 .clock-date {
   font-size: 16px;
@@ -908,7 +909,8 @@ const save = k => {
 function tick() {
   const n = new Date();
   const hm = n.toLocaleTimeString(t('locale'), { hour: '2-digit', minute: '2-digit' });
-  const dt = n.toLocaleDateString(t('locale'), { weekday: 'long', day: '2-digit', month: 'long' });  document.querySelectorAll('.clock-time').forEach(e => e.textContent = hm);
+  const dt = n.toLocaleDateString(t('locale'), { weekday: 'long', day: '2-digit', month: 'long' });
+  document.querySelectorAll('.clock-time').forEach(e => e.textContent = hm);
   const cd = document.getElementById('ck-date');
   if (cd) cd.textContent = dt.charAt(0).toUpperCase() + dt.slice(1);
 }
