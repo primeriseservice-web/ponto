@@ -746,7 +746,6 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   <!-- ── TAB: CONFIG ── -->
   <div id="tab-cfg" style="display:none">
     <button class="btn btn-outline" id="btn-sair" onclick="adminLogout()" style="margin-bottom:8px">Sair do admin</button>
-    <button class="btn btn-danger" onclick="clearAllData()" style="font-size:13px">🗑 Zerar todos os dados</button>
   </div>
 
 </div><!-- /screen-admin -->
@@ -1806,12 +1805,6 @@ function debugRecords() {
     `${i+1}. nome="${r.empName||r.name||'?'}" data="${r.date}" hotel="${r.hotel}" entrada="${r.entrada?'sim':'nao'}" saida="${r.saida?'sim':'nao'}"`
   ).join('\n');
   alert('Registros encontrados (' + recs.length + '):\n\n' + info);
-}
-
-function clearAllData() {
-  if (!confirm('Apagar TODOS os registros e funcionários? Esta ação não pode ser desfeita.')) return;
-  localStorage.clear();
-  location.reload();
 }
 </script>
 </body>
