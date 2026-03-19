@@ -47,7 +47,7 @@ html { height: 100%; background: var(--bg); }
 body {
   min-height: 100dvh;
   background: var(--bg);
-  color: var(--text);
+  color: #fff;
   font-family: 'Geist', system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.5;
@@ -93,7 +93,7 @@ body {
   font-family: 'Instrument Serif', Georgia, serif;
   font-size: 18px;
   font-weight: 400;
-  color: var(--text);
+  color: #fff;
   letter-spacing: -0.3px;
 }
 .wordmark-dot {
@@ -164,21 +164,22 @@ body {
   font-weight: 700;
   letter-spacing: 3px;
   line-height: 1;
-  color: var(--text);
+  color: #fff;
   margin-bottom: 10px;
   font-variant-numeric: tabular-nums;
 }
 .clock-date {
   font-size: 16px;
   font-weight: 400;
-  color: var(--muted2);
+  color: #fff;
   letter-spacing: 0.5px;
+  opacity: 0.75;
 }
 .clock-badge {
   display: none;
   font-size: 13px;
   font-weight: 500;
-  color: var(--gold);
+  color: #fff;
   background: var(--gold-dim);
   border: 1px solid rgba(212,168,67,0.2);
   border-radius: 20px;
@@ -192,7 +193,7 @@ body {
 .section-label {
   font-size: 11px;
   font-weight: 500;
-  color: var(--muted);
+  color: #fff;
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 4px;
@@ -225,7 +226,7 @@ select {
   background: var(--bg2);
   border: 1px solid var(--border2);
   border-radius: var(--r-md);
-  color: var(--text);
+  color: #fff;
   font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 15px;
   font-weight: 400;
@@ -236,7 +237,7 @@ select {
   transition: border-color 0.2s;
 }
 select:focus { border-color: var(--gold); }
-select option { background: #1e1e23; color: var(--text); }
+select option { background: #1e1e23; color: #fff; }
 
 /* ── PIN INPUT ── */
 .pin-wrap {
@@ -252,7 +253,7 @@ select option { background: #1e1e23; color: var(--text); }
   display: flex; align-items: center; justify-content: center;
   font-family: 'Geist Mono', monospace;
   font-size: 22px;
-  color: var(--text);
+  color: #fff;
   transition: all 0.2s;
 }
 .pin-digit.filled { border-color: rgba(212,168,67,0.4); background: var(--gold-dim); color: var(--gold); }
@@ -299,8 +300,8 @@ select option { background: #1e1e23; color: var(--text); }
 .q-row:last-child { border-bottom: none; padding-bottom: 0; }
 .q-row:first-child { padding-top: 0; }
 
-.q-info .q-name { font-size: 14px; font-weight: 500; color: var(--text); }
-.q-info .q-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.q-info .q-name { font-size: 14px; font-weight: 500; color: #fff; }
+.q-info .q-sub  { font-size: 14px; color: #fff; margin-top: 2px; opacity: 0.85; }
 
 .q-stepper { display: flex; align-items: center; gap: 0; }
 .q-minus, .q-plus {
@@ -308,7 +309,7 @@ select option { background: #1e1e23; color: var(--text); }
   border-radius: var(--r-sm);
   border: 1px solid var(--border2);
   background: var(--bg3);
-  color: var(--muted2);
+  color: #fff; opacity: 0.75;
   font-size: 18px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
@@ -324,10 +325,10 @@ select option { background: #1e1e23; color: var(--text); }
   font-weight: 500;
   min-width: 48px;
   text-align: center;
-  color: var(--muted);
+  color: #fff; opacity: 0.7;
   transition: color 0.2s;
 }
-.q-num.lit { color: var(--text); }
+.q-num.lit { color: #fff; }
 
 /* ── TOTALS BAR ── */
 .totals-bar {
@@ -342,16 +343,9 @@ select option { background: #1e1e23; color: var(--text); }
   padding: 14px 12px;
   text-align: center;
 }
-.tot-val {
-  font-family: 'Geist Mono', monospace;
-  font-size: 26px;
-  font-weight: 500;
-  color: var(--muted);
-  line-height: 1;
-  transition: color 0.3s;
-}
+.tot-val { font-size: 28px; font-weight: 700; color: #fff; }
 .tot-val.lit { color: var(--gold); }
-.tot-label { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; }
+.tot-label { font-size: 13px; color: #fff; margin-top: 4px; letter-spacing: 0.5px; font-weight: 500; }
 
 /* ── STATUS ROW ── */
 
@@ -382,7 +376,7 @@ select option { background: #1e1e23; color: var(--text); }
 .btn-gold:active    { transform: scale(0.98); filter: brightness(0.9); }
 .btn-danger  { background: var(--red-dim); color: var(--red); border: 1px solid rgba(212,92,92,0.25); }
 .btn-danger:active  { transform: scale(0.98); }
-.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--muted2); font-size: 14px; }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: #fff; opacity: 0.75; font-size: 14px; }
 .btn-outline:active { transform: scale(0.98); background: var(--bg2); }
 .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
 
@@ -401,7 +395,7 @@ select option { background: #1e1e23; color: var(--text); }
   border-radius: var(--r-sm);
   border: none;
   background: none;
-  color: var(--muted);
+  color: #fff; opacity: 0.7;
   font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 12px;
   font-weight: 400;
@@ -411,7 +405,7 @@ select option { background: #1e1e23; color: var(--text); }
 }
 .tab.active {
   background: var(--bg3);
-  color: var(--text);
+  color: #fff;
   font-weight: 500;
   border: 1px solid var(--border2);
 }
@@ -426,30 +420,26 @@ select option { background: #1e1e23; color: var(--text); }
 }
 .rep-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
 .rep-name { font-size: 15px; font-weight: 500; }
-.rep-hotel-tag {
-  font-size: 10px; font-weight: 500;
-  letter-spacing: 0.5px; text-transform: uppercase;
-  margin-top: 2px;
-}
+.rep-hotel-tag { display: none; }
 .rep-hotel-tag.kinuura { color: var(--gold); }
 .rep-hotel-tag.shinsuma { color: var(--blue); }
 .rep-total-num {
   font-family: 'Instrument Serif', Georgia, serif;
   font-size: 36px;
-  color: var(--text);
+  color: #fff;
   line-height: 1;
 }
-.rep-total-label { font-size: 10px; color: var(--muted); margin-top: 2px; text-align: right; }
-.rep-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rep-total-label { font-size: 10px; color: #fff; margin-top: 2px; text-align: right; opacity: 0.7; }
+.rep-breakdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .rep-type {
   background: var(--bg2);
   border-radius: var(--r-sm);
   padding: 10px 8px;
   text-align: center;
 }
-.rep-type-val { font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 500; }
-.rep-type-lbl { font-size: 10px; color: var(--muted); margin-top: 3px; }
-.rep-time { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.9; font-family: 'Geist Mono', monospace; }
+.rep-type-val { font-size: 20px; font-weight: 600; color: #fff; }
+.rep-type-lbl { font-size: 13px; color: #fff; margin-top: 4px; font-weight: 500; }
+.rep-time { font-size: 11px; color: #fff; margin-top: 10px; line-height: 1.9; opacity: 0.7; }
 
 /* ── MONTH REPORT ── */
 .mon-card {
@@ -469,17 +459,17 @@ select option { background: #1e1e23; color: var(--text); }
 }
 .mon-hotel-pill.kinuura  { background: var(--gold-dim); color: var(--gold); }
 .mon-hotel-pill.shinsuma { background: var(--blue-dim); color: var(--blue); }
-.mon-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mon-breakdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .mon-type-cell {
   background: var(--bg2);
   border-radius: var(--r-sm);
   padding: 12px 8px;
   text-align: center;
 }
-.mon-type-val { font-family: 'Instrument Serif', Georgia, serif; font-size: 28px; color: var(--text); line-height: 1; }
-.mon-type-lbl { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; }
+.mon-type-val { font-size: 22px; font-weight: 600; color: #fff; }
+.mon-type-lbl { font-size: 10px; color: #fff; opacity: 0.7; margin-top: 4px; letter-spacing: 0.5px; }
 .mon-total-row { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.mon-total-txt { font-size: 12px; color: var(--muted); }
+.mon-total-txt { font-size: 13px; color: #fff; opacity: 0.7; }
 .mon-total-val { font-family: 'Geist Mono', monospace; font-size: 22px; font-weight: 500; color: var(--gold); }
 
 /* ── EMP ITEMS ── */
@@ -494,8 +484,8 @@ select option { background: #1e1e23; color: var(--text); }
   margin-bottom: 6px;
 }
 .emp-item-name { font-size: 14px; font-weight: 500; }
-.emp-item-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'Geist Mono', monospace; }
-.del-emp { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 6px; transition: color 0.2s; }
+.emp-item-sub  { font-size: 11px; color: #fff; opacity: 0.7; margin-top: 2px; font-family: 'Geist Mono', monospace; }
+.del-emp { background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 16px; padding: 4px 6px; transition: color 0.2s; }
 .del-emp:hover { color: var(--red); }
 
 /* ── INPUTS ── */
@@ -504,7 +494,7 @@ input[type=text], input[type=password], input[type=number], input[type=date], in
   background: var(--bg2);
   border: 1px solid var(--border2);
   border-radius: var(--r-md);
-  color: var(--text);
+  color: #fff;
   font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   padding: 13px 16px;
@@ -513,7 +503,7 @@ input[type=text], input[type=password], input[type=number], input[type=date], in
   appearance: none;
 }
 input:focus { border-color: rgba(212,168,67,0.5); }
-input::placeholder { color: var(--muted); }
+input::placeholder { color: #fff; opacity: 0.7; }
 input[type=number]::-webkit-inner-spin-button { display: none; }
 
 /* ── SUMMARY STRIP ── */
@@ -530,8 +520,8 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   padding: 14px 10px;
   text-align: center;
 }
-.sum-val { font-family: 'Geist Mono', monospace; font-size: 22px; font-weight: 500; color: var(--text); }
-.sum-lbl { font-size: 10px; color: var(--muted); margin-top: 4px; }
+.sum-val { font-size: 26px; font-weight: 700; color: #fff; }
+.sum-lbl { font-size: 13px; color: #fff; margin-top: 3px; font-weight: 500; }
 
 /* ── DIVIDER ── */
 .divider { height: 1px; background: var(--border); margin: 4px 0; }
@@ -541,7 +531,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 .scrollable::-webkit-scrollbar { display: none; }
 
 /* ── EMPTY ── */
-.empty { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; line-height: 2; }
+.empty { text-align: center; padding: 32px 16px; color: #fff; opacity: 0.7; font-size: 13px; line-height: 2; }
 
 /* ── INLINE ROW ── */
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -555,7 +545,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   transform: translateX(-50%) translateY(100px);
   background: var(--bg3);
   border: 1px solid var(--border2);
-  color: var(--text);
+  color: #fff;
   font-size: 13px;
   font-weight: 500;
   padding: 11px 20px;
@@ -576,18 +566,61 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   border-radius: var(--r-md);
   padding: 16px;
   font-size: 12px;
-  color: var(--muted2);
+  color: #fff; opacity: 0.75;
   line-height: 2;
 }
 .info-box strong { color: var(--gold); display: block; font-size: 13px; margin-bottom: 4px; }
 
 /* ── LOGO FIELD ── */
-.field-label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 6px; }
+.field-label { font-size: 11px; font-weight: 500; color: #fff; letter-spacing: 0.5px; margin-bottom: 6px; }
 
 
 
 
 
+
+.mini-total-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(212,168,67,0.1);
+  border: 1px solid rgba(212,168,67,0.3);
+  border-radius: 20px;
+  padding: 4px 14px 4px 10px;
+}
+.mini-total-label {
+  font-size: 12px;
+  color: #fff;
+  opacity: 0.8;
+  font-weight: 500;
+}
+.mini-total-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.mini-hours-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 3px 12px 3px 10px;
+  margin-top: 5px;
+}
+.mini-hours-label {
+  font-size: 11px;
+  color: #ccc;
+  font-weight: 500;
+}
+.mini-hours-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ccc;
+  line-height: 1;
+}
 </style>
 </head>
 <body>
@@ -655,7 +688,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:16px">
     <div>
       <div style="font-family:'Instrument Serif',Georgia,serif;font-size:28px;font-weight:400;line-height:1.1" id="pt-name">—</div>
-      <div id="pt-hotel-label" style="font-size:15px;color:var(--muted2);margin-top:6px;font-weight:400"></div>
+      <div id="pt-hotel-label" style="font-size:15px;color:#fff;margin-top:6px;font-weight:400;opacity:0.7"></div>
     </div>
     <div id="pt-hotel-tag" class="hotel-tag"></div>
   </div>
@@ -667,7 +700,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 
   <!-- Quarto counters -->
   <div class="card">
-    <div class="section-label" id="rooms-label">Quartos limpos</div>
+    <div class="section-label" id="rooms-label" style="color:#fff;font-weight:700">Quartos limpos</div>
     <div class="quarto-list" id="q-list"></div>
   </div>
 
@@ -755,6 +788,50 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 
 </div><!-- /screen-admin -->
 
+
+<!-- ═══ MODAL: EDITAR QUARTOS (ADMIN) ═══ -->
+<div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:999;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px;width:90%;max-width:400px">
+    <div style="font-size:18px;font-weight:600;margin-bottom:16px" id="edit-modal-name">Editar quartos</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Single</div>
+      <input type="number" id="edit-single" min="0" style="width:100%;padding:10px;font-size:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text)">
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Double (Twin)</div>
+      <input type="number" id="edit-twin" min="0" style="width:100%;padding:10px;font-size:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text)">
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Double (Twin 12º)</div>
+      <input type="number" id="edit-twin12" min="0" style="width:100%;padding:10px;font-size:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text)">
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Triple</div>
+      <input type="number" id="edit-triple" min="0" style="width:100%;padding:10px;font-size:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text)">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-gold" onclick="saveEditRecord()" style="flex:1">Salvar</button>
+      <button class="btn btn-outline" onclick="closeEditModal()" style="flex:1">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: RESUMO DO DIA ═══ -->
+<div id="screen-summary" class="screen">
+  <div class="card" style="margin-bottom:16px">
+    <div id="sum-emp-name" style="font-family:'Instrument Serif',Georgia,serif;font-size:28px;font-weight:400;margin-bottom:4px">—</div>
+    <div style="font-size:14px;color:var(--muted2)">Hotel: Kinuura</div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:14px;color:#fff;text-transform:uppercase;letter-spacing:0.5px;font-weight:700">Quartos limpos hoje</div>
+      <div id="sum-total" style="font-size:36px;font-weight:700;color:var(--gold)">0</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" id="sum-breakdown"></div>
+    <div id="sum-time" style="font-size:13px;color:var(--muted2);border-top:1px solid var(--border);padding-top:12px;margin-top:4px"></div>
+  </div>
+  <button class="btn btn-outline" onclick="goBack()" style="margin-top:16px">← Voltar</button>
+</div>
 </div><!-- /wrap -->
 
 <div class="toast" id="toast"></div>
@@ -1120,8 +1197,6 @@ function initSelect() {
   if (tq > 0) { badge.textContent = t('badgeRooms', tq); badge.style.display = 'block'; }
   else badge.style.display = 'none';
 }
-  updateGoBtn();
-}
 
 
 function onEmpChange() {
@@ -1131,7 +1206,6 @@ function onEmpChange() {
   renderPinDisplay('');
   document.getElementById('go-btn').disabled = true;
   if (v !== '') setTimeout(() => document.getElementById('pin-real').focus(), 100);
-}
   updateGoBtn();
 }
 
@@ -1204,7 +1278,8 @@ function goToEmployee() {
   const closed = DB.records.find(r => r.empIdx === cur.idx && r.date === today() && r.saida);
 
   if (closed) {
-    // Já encerrou — não faz nada, botão já está desabilitado
+    // Ponto encerrado — mostrar tela de resumo
+    showSummaryScreen(closed);
     return;
   }
 
@@ -1223,7 +1298,7 @@ function goToEmployee() {
     pushRecord(rec);
     toast(t('toastIn'), 'ok');
   } else {
-    // Já entrou — carregar contadores e ir para tela
+    // Já entrou — carregar contadores
     Q = { single: open.single||0, twin: open.twin||0, twin12: open.twin12||0, triple: open.triple||0 };
   }
 
@@ -1506,12 +1581,17 @@ function renderDaily() {
     card.style.borderLeftWidth = '4px';
     card.innerHTML = `
       <div class="rep-header">
-        <div>
-          <div class="rep-name" style="color:${clr.text};font-weight:600">${g.name}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="rep-total-num">${tot}</div>
-          <div class="rep-total-label">${t('totalRooms')}</div>
+        <div class="rep-name" style="color:#fff;font-weight:600">${g.name}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end">
+          <div class="mini-total-card">
+            <div class="mini-total-label">Total</div>
+            <div class="mini-total-val">${tot}</div>
+          </div>
+          ${g.recs[0] && g.recs[0].entrada && g.recs[0].saida ? `
+          <div class="mini-hours-card">
+            <div class="mini-hours-label">Horas</div>
+            <div class="mini-hours-val">${calcHours(g.recs[0].entrada, g.recs[0].saida)}</div>
+          </div>` : ''}
         </div>
       </div>
       <div class="rep-breakdown">
@@ -1519,9 +1599,9 @@ function renderDaily() {
         <div class="rep-type"><div class="rep-type-val">${twn}</div><div class="rep-type-lbl">${t("roomTwin")}</div></div>
         <div class="rep-type"><div class="rep-type-val">${t12}</div><div class="rep-type-lbl">${t("roomTwin12")}</div></div>
         <div class="rep-type"><div class="rep-type-val">${tr}</div><div class="rep-type-lbl">${t("roomTriple")}</div></div>
-        <div class="rep-type" style="background:rgba(212,168,67,0.08)"><div class="rep-type-val" style="color:var(--gold)">${tot}</div><div class="rep-type-lbl">Total</div></div>
       </div>
-      <div class="rep-time">${times}</div>`;
+      <div class="rep-time">${times}</div>
+      <button class="btn btn-outline" style="margin-top:10px;font-size:12px;padding:8px" onclick="adminEditRecord('${g.recs[0].id}')">✏️ Editar quartos</button>`;
     list.appendChild(card);
   });
 }
@@ -1550,7 +1630,7 @@ function renderMonthly() {
 
   list.innerHTML = '';
   Object.values(grp).sort((a,b) => a.name.localeCompare(b.name)).forEach(g => {
-    const tot = g.single + g.twin + g.triple;
+    const tot = g.single + g.twin + (g.twin12||0) + g.triple;
     const clr = empColor(g.name);
     const card = document.createElement('div');
     card.className = 'mon-card';
@@ -1558,8 +1638,18 @@ function renderMonthly() {
     card.style.borderLeftWidth = '4px';
     card.innerHTML = `
       <div class="mon-header">
-        <div class="mon-name" style="color:${clr.text};font-weight:600">${g.name}</div>
-        <span class="mon-hotel-pill ${g.hotel}">${g.hotel}</span>
+        <div class="mon-name" style="color:#fff;font-weight:600">${g.name}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end">
+          <div class="mini-total-card">
+            <div class="mini-total-label">Total</div>
+            <div class="mini-total-val">${tot}</div>
+          </div>
+          ${g.totalMinutes > 0 ? `
+          <div class="mini-hours-card">
+            <div class="mini-hours-label">Horas</div>
+            <div class="mini-hours-val">${String(Math.floor(g.totalMinutes/60)).padStart(2,'0')}:${String(g.totalMinutes%60).padStart(2,'0')}</div>
+          </div>` : ''}
+        </div>
       </div>
       <div class="mon-breakdown">
         <div class="mon-type-cell"><div class="mon-type-val">${g.single}</div><div class="mon-type-lbl">${t("roomSingle")}</div></div>
@@ -1567,10 +1657,7 @@ function renderMonthly() {
         <div class="mon-type-cell"><div class="mon-type-val">${g.twin12||0}</div><div class="mon-type-lbl">${t("roomTwin12")}</div></div>
         <div class="mon-type-cell"><div class="mon-type-val">${g.triple}</div><div class="mon-type-lbl">${t("roomTriple")}</div></div>
       </div>
-      <div class="mon-total-row">
-        <div class="mon-total-txt">${t('totalMonth')}</div>
-        <div class="mon-total-val">${tot}</div>
-      </div>`;
+`;
     list.appendChild(card);
   });
 }
@@ -1588,7 +1675,7 @@ function renderEmpList() {
     d.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px">
         <div>
-          <div class="emp-item-name" style="color:${ec.text}">${e.name}</div>
+          <div class="emp-item-name" style="color:#fff">${e.name}</div>
           <div class="emp-item-sub">PIN: ${'●'.repeat(e.pin.length)}</div>
         </div>
       </div>
@@ -1880,6 +1967,71 @@ function resetWithPassword() {
   if (!confirm('Apagar TODOS os dados? Esta ação não pode ser desfeita.')) return;
   localStorage.clear();
   location.reload();
+}
+
+let editingRecordId = null;
+
+function adminEditRecord(recId) {
+  const rec = DB.records.find(r => r.id === recId);
+  if (!rec) { toast('Registro não encontrado', 'err'); return; }
+  editingRecordId = recId;
+  document.getElementById('edit-modal-name').textContent = '✏️ Editar — ' + (rec.empName||rec.name||'?');
+  document.getElementById('edit-single').value  = rec.single  || 0;
+  document.getElementById('edit-twin').value    = rec.twin    || 0;
+  document.getElementById('edit-twin12').value  = rec.twin12  || 0;
+  document.getElementById('edit-triple').value  = rec.triple  || 0;
+  const modal = document.getElementById('edit-modal');
+  modal.style.display = 'flex';
+}
+
+function saveEditRecord() {
+  if (!editingRecordId) return;
+  const i = DB.records.findIndex(r => r.id === editingRecordId);
+  if (i < 0) { toast('Registro não encontrado', 'err'); return; }
+  DB.records[i].single = parseInt(document.getElementById('edit-single').value)  || 0;
+  DB.records[i].twin   = parseInt(document.getElementById('edit-twin').value)    || 0;
+  DB.records[i].twin12 = parseInt(document.getElementById('edit-twin12').value)  || 0;
+  DB.records[i].triple = parseInt(document.getElementById('edit-triple').value)  || 0;
+  save('records');
+  pushRecordUpdate(DB.records[i]);
+  toast('Quartos atualizados!', 'ok');
+  closeEditModal();
+  renderDaily();
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editingRecordId = null;
+}
+
+function showSummaryScreen(rec) {
+  const clr = empColor(rec.empName || rec.name || '?');
+  document.getElementById('sum-emp-name').textContent = rec.empName || rec.name || '?';
+  document.getElementById('sum-emp-name').style.color = '#fff';
+
+  const s   = rec.single  || 0;
+  const tw  = rec.twin    || 0;
+  const t12 = rec.twin12  || 0;
+  const tr  = rec.triple  || 0;
+  const tot = s + tw + t12 + tr;
+
+  document.getElementById('sum-total').textContent = tot;
+
+  document.getElementById('sum-breakdown').innerHTML = `
+    <div class="tot-cell"><div class="tot-val">${s}</div><div class="tot-label">Single</div></div>
+    <div class="tot-cell"><div class="tot-val">${tw}</div><div class="tot-label">Double (Twin)</div></div>
+    <div class="tot-cell"><div class="tot-val">${t12}</div><div class="tot-label">Twin 12º</div></div>
+    <div class="tot-cell"><div class="tot-val">${tr}</div><div class="tot-label">Triple</div></div>
+  `;
+
+  const ent = rec.entrada ? fmtT(rec.entrada) : '—';
+  const sai = rec.saida   ? fmtT(rec.saida)   : '—';
+  const hrs = calcHours(rec.entrada, rec.saida);
+  document.getElementById('sum-time').innerHTML = 
+    `Entrada: <strong>${ent}</strong> &nbsp;→&nbsp; Saída: <strong>${sai}</strong>` +
+    (hrs ? `&nbsp;&nbsp;|&nbsp;&nbsp;Horas: <strong>${hrs}</strong>` : '');
+
+  showScreen('summary');
 }
 </script>
 </body>
