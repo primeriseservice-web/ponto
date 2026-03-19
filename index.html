@@ -305,25 +305,26 @@ select option { background: #1e1e23; color: #fff; }
 
 .q-stepper { display: flex; align-items: center; gap: 0; }
 .q-minus, .q-plus {
-  width: 34px; height: 34px;
+  width: 52px; height: 52px;
   border-radius: var(--r-sm);
   border: 1px solid var(--border2);
   background: var(--bg3);
-  color: #fff; opacity: 0.75;
-  font-size: 18px;
+  color: #fff; opacity: 0.9;
+  font-size: 24px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: all 0.15s var(--ease);
   user-select: none;
   line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .q-minus:active { background: var(--bg2); transform: scale(0.88); }
 .q-plus:active  { background: var(--gold); color: #000; border-color: var(--gold); transform: scale(0.88); }
 .q-num {
-  font-family: 'Geist Mono', monospace;
-  font-size: 20px;
-  font-weight: 500;
-  min-width: 48px;
+  font-size: 26px;
+  font-weight: 600;
+  min-width: 56px;
   text-align: center;
   color: #fff; opacity: 0.7;
   transition: color 0.2s;
