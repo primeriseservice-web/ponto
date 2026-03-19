@@ -517,7 +517,10 @@ input::placeholder { color: var(--muted); }
 input[type=number]::-webkit-inner-spin-button { display: none; }
 
 /* ── SUMMARY STRIP ── */
-.sum-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.sum-strip { margin-bottom: 12px; }
+.sum-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
+.sum-total-row { display: flex; justify-content: center; }
+.sum-total-row .sum-cell-total { width: 120px; }
 .sum-cell-total { background: rgba(212,168,67,0.08) !important; border: 1px solid rgba(212,168,67,0.2) !important; border-radius: var(--r-sm); }
 .sum-val-total { color: var(--gold) !important; }
 .sum-cell {
@@ -672,6 +675,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   <div class="totals-bar">
     <div class="tot-cell"><div class="tot-val" id="tv-s">0</div><div class="tot-label" id="tot-lbl-s">Single</div></div>
     <div class="tot-cell"><div class="tot-val" id="tv-t">0</div><div class="tot-label" id="tot-lbl-t">Twin</div></div>
+    <div class="tot-cell"><div class="tot-val" id="tv-t12">0</div><div class="tot-label" id="tot-lbl-t12">Twin 12º</div></div>
     <div class="tot-cell"><div class="tot-val" id="tv-tr">0</div><div class="tot-label" id="tot-lbl-tr">Triple</div></div>
   </div>
 
@@ -746,6 +750,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
   <!-- ── TAB: CONFIG ── -->
   <div id="tab-cfg" style="display:none">
     <button class="btn btn-outline" id="btn-sair" onclick="adminLogout()" style="margin-bottom:8px">Sair do admin</button>
+    <button class="btn btn-danger" onclick="resetWithPassword()" style="font-size:13px">🗑 Resetar dados de teste</button>
   </div>
 
 </div><!-- /screen-admin -->
@@ -769,7 +774,9 @@ const LANG = {
     roomsLabel:      'Quartos limpos',
     singleSub:       '1 Cama',
     twinSub:         '2 Camas',
+    twin12Sub:       '2 Camas do 12º',
     tripleSub:       '3 Camas',
+    roomTwin12:      'Double (Twin 12º)',
     punchIn:         'Registrar Entrada',
     punchOut:        'Registrar Saída',
     badgeRooms:      (n) => `${n} quartos hoje`,
@@ -845,7 +852,9 @@ const LANG = {
     roomsLabel:      '清掃済み客室',
     singleSub:       'ベッド1台',
     twinSub:         'ベッド2台',
+    twin12Sub:       '12階 ベッド2台',
     tripleSub:       'ベッド3台',
+    roomTwin12:      'ダブル（ツイン12階）',
     punchIn:         '出勤登録',
     punchOut:        '退勤登録',
     badgeRooms:      (n) => `本日 ${n} 室`,
@@ -1107,7 +1116,7 @@ function initSelect() {
 
   // Today total badge
   const tq = DB.records.filter(r => r.date === today())
-    .reduce((a, r) => a + (r.single || 0) + (r.twin || 0) + (r.triple || 0), 0);
+    .reduce((a, r) => a + (r.single || 0) + (r.twin || 0) + (r.twin12 || 0) + (r.triple || 0), 0);
   const badge = document.getElementById('ck-badge');
   if (tq > 0) { badge.textContent = t('badgeRooms', tq); badge.style.display = 'block'; }
   else badge.style.display = 'none';
@@ -1157,7 +1166,7 @@ function goToEmployee() {
 
   cur = { ...emp, idx };
   hotel = null;
-  Q = { single: 0, twin: 0, triple: 0 };
+  Q = { single: 0, twin: 0, twin12: 0, triple: 0 };
   initPonto();
   showScreen('ponto');
 }
@@ -1175,14 +1184,14 @@ function initPonto() {
   if (open) {
     // Em turno — mostrar saída
     hotel = open.hotel;
-    Q = { single: open.single || 0, twin: open.twin || 0, triple: open.triple || 0 };
+    Q = { single: open.single || 0, twin: open.twin || 0, twin12: open.twin12 || 0, triple: open.triple || 0 };
     document.getElementById('hotel-picker').style.display = 'none';
     // setHotelTag removido
     setPunchBtn('out');
   } else if (closed) {
     // Já saiu hoje — contadores editáveis, botão desabilitado
     hotel = closed.hotel;
-    Q = { single: closed.single || 0, twin: closed.twin || 0, triple: closed.triple || 0 };
+    Q = { single: closed.single || 0, twin: closed.twin || 0, twin12: closed.twin12 || 0, triple: closed.triple || 0 };
     document.getElementById('hotel-picker').style.display = 'none';
     // setHotelTag removido
     setPunchBtn('done');
@@ -1247,6 +1256,7 @@ function renderQRows() {
   const types = [
     { key: 'single', name: t('roomSingle'), sub: 'singleSub' },
     { key: 'twin',   name: t('roomTwin'),   sub: 'twinSub' },
+    { key: 'twin12', name: t('roomTwin12'), sub: 'twin12Sub' },
     { key: 'triple', name: t('roomTriple'), sub: 'tripleSub' },
   ];
   const el = document.getElementById('q-list');
@@ -1284,6 +1294,7 @@ function chQ(key, delta) {
     if (i > -1) {
       DB.records[i].single = Q.single;
       DB.records[i].twin   = Q.twin;
+      DB.records[i].twin12 = Q.twin12;
       DB.records[i].triple = Q.triple;
       save('records');
       pushRecordUpdate(DB.records[i]);
@@ -1313,7 +1324,7 @@ function punch() {
       empIdx: cur.idx, name: cur.name, empName: cur.name,
       hotel, date: today(),
       entrada: nowISO(), saida: null,
-      single: 0, twin: 0, triple: 0,
+      single: 0, twin: 0, twin12: 0, triple: 0,
     };
     DB.records.push(rec);
     save('records');
@@ -1325,8 +1336,9 @@ function punch() {
     DB.records[i].saida  = nowISO();
     DB.records[i].single = Q.single;
     DB.records[i].twin   = Q.twin;
+    DB.records[i].twin12 = Q.twin12;
     DB.records[i].triple = Q.triple;
-    const tot = Q.single + Q.twin + Q.triple;
+    const tot = Q.single + Q.twin + (Q.twin12||0) + Q.triple;
     save('records');
     pushRecordUpdate(DB.records[i]);
     toast(t('toastOut', tot), 'ok');
@@ -1407,14 +1419,20 @@ function renderDaily() {
 
   const tS = recs.reduce((a,r) => a+(r.single||0), 0);
   const tT = recs.reduce((a,r) => a+(r.twin||0), 0);
+  const tT12 = recs.reduce((a,r) => a+(r.twin12||0), 0);
   const tTr = recs.reduce((a,r) => a+(r.triple||0), 0);
 
-  const tTotal = tS + tT + tTr;
+  const tTotal = tS + tT + tT12 + tTr;
   document.getElementById('day-summary').innerHTML = `
-    <div class="sum-cell"><div class="sum-val">${tS}</div><div class="sum-lbl">${t('roomSingle')}</div></div>
-    <div class="sum-cell"><div class="sum-val">${tT}</div><div class="sum-lbl">${t("roomTwin")}</div></div>
-    <div class="sum-cell"><div class="sum-val">${tTr}</div><div class="sum-lbl">${t("roomTriple")}</div></div>
-    <div class="sum-cell sum-cell-total"><div class="sum-val sum-val-total">${tTotal}</div><div class="sum-lbl">Total</div></div>`;
+    <div class="sum-grid">
+      <div class="sum-cell"><div class="sum-val">${tS}</div><div class="sum-lbl">${t('roomSingle')}</div></div>
+      <div class="sum-cell"><div class="sum-val">${tT}</div><div class="sum-lbl">${t("roomTwin")}</div></div>
+      <div class="sum-cell"><div class="sum-val">${tT12}</div><div class="sum-lbl">${t("roomTwin12")}</div></div>
+      <div class="sum-cell"><div class="sum-val">${tTr}</div><div class="sum-lbl">${t("roomTriple")}</div></div>
+    </div>
+    <div class="sum-total-row">
+      <div class="sum-cell sum-cell-total"><div class="sum-val sum-val-total">${tTotal}</div><div class="sum-lbl">Total</div></div>
+    </div>`;
 
   const list = document.getElementById('day-list');
   if (!recs.length) { list.innerHTML = '<div class="empty">' + t('noRecordsDay') + '</div>'; return; }
@@ -1428,10 +1446,11 @@ function renderDaily() {
 
   list.innerHTML = '';
   Object.values(grp).forEach(g => {
-    const s  = g.recs.reduce((a,r) => a+(r.single||0), 0);
+    const s   = g.recs.reduce((a,r) => a+(r.single||0), 0);
     const twn = g.recs.reduce((a,r) => a+(r.twin||0), 0);
-    const tr = g.recs.reduce((a,r) => a+(r.triple||0), 0);
-    const tot = s + twn + tr;
+    const t12 = g.recs.reduce((a,r) => a+(r.twin12||0), 0);
+    const tr  = g.recs.reduce((a,r) => a+(r.triple||0), 0);
+    const tot = s + twn + t12 + tr;
     const times = g.recs.map(r => {
       const ent = r.entrada ? fmtT(r.entrada) : '—';
       const sai = r.saida   ? fmtT(r.saida)   : '<span style="color:var(--green)">aberto</span>';
@@ -1455,6 +1474,7 @@ function renderDaily() {
       <div class="rep-breakdown">
         <div class="rep-type"><div class="rep-type-val">${s}</div><div class="rep-type-lbl">${t("roomSingle")}</div></div>
         <div class="rep-type"><div class="rep-type-val">${twn}</div><div class="rep-type-lbl">${t("roomTwin")}</div></div>
+        <div class="rep-type"><div class="rep-type-val">${t12}</div><div class="rep-type-lbl">${t("roomTwin12")}</div></div>
         <div class="rep-type"><div class="rep-type-val">${tr}</div><div class="rep-type-lbl">${t("roomTriple")}</div></div>
         <div class="rep-type" style="background:rgba(212,168,67,0.08)"><div class="rep-type-val" style="color:var(--gold)">${tot}</div><div class="rep-type-lbl">Total</div></div>
       </div>
@@ -1474,9 +1494,10 @@ function renderMonthly() {
   const grp = {};
   recs.forEach(r => {
     const k = (r.empName||r.name||'?') + '__' + r.hotel;
-    if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single: 0, twin: 0, triple: 0, totalMinutes: 0 };
+    if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single: 0, twin: 0, twin12: 0, triple: 0, totalMinutes: 0 };
     grp[k].single  += (r.single  || 0);
     grp[k].twin    += (r.twin    || 0);
+    grp[k].twin12  += (r.twin12  || 0);
     grp[k].triple  += (r.triple  || 0);
     if (r.entrada && r.saida) {
       const mins = Math.round((new Date(r.saida) - new Date(r.entrada)) / 60000);
@@ -1500,6 +1521,7 @@ function renderMonthly() {
       <div class="mon-breakdown">
         <div class="mon-type-cell"><div class="mon-type-val">${g.single}</div><div class="mon-type-lbl">${t("roomSingle")}</div></div>
         <div class="mon-type-cell"><div class="mon-type-val">${g.twin}</div><div class="mon-type-lbl">${t("roomTwin")}</div></div>
+        <div class="mon-type-cell"><div class="mon-type-val">${g.twin12||0}</div><div class="mon-type-lbl">${t("roomTwin12")}</div></div>
         <div class="mon-type-cell"><div class="mon-type-val">${g.triple}</div><div class="mon-type-lbl">${t("roomTriple")}</div></div>
       </div>
       <div class="mon-total-row">
@@ -1584,8 +1606,8 @@ function exportCSV(type) {
     const grp = {};
     rows.forEach(r => {
       const k = (r.empName||r.name||'?') + '__' + r.hotel;
-      if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single:0, twin:0, triple:0 };
-      grp[k].single+=(r.single||0); grp[k].twin+=(r.twin||0); grp[k].triple+=(r.triple||0);
+      if (!grp[k]) grp[k] = { name: r.empName||r.name||'?', hotel: r.hotel, single:0, twin:0, twin12:0, triple:0 };
+      grp[k].single+=(r.single||0); grp[k].twin+=(r.twin||0); grp[k].twin12+=(r.twin12||0); grp[k].triple+=(r.triple||0);
     });
     // Calcular total de horas por funcionário no mês
     const grpHours = {};
@@ -1596,7 +1618,7 @@ function exportCSV(type) {
         grpHours[k] += new Date(r.saida) - new Date(r.entrada);
       }
     });
-    hdr  = 'Nome;Single;Double;Triple;Total Quartos;Total Horas\n';
+    hdr  = 'Nome;Single;Double;Double 12º;Triple;Total Quartos;Total Horas\n';
     body = Object.values(grp).map(g => {
       const ms = grpHours[g.name] || 0;
       const th = ms > 0 ? String(Math.floor(ms/3600000)).padStart(2,'0') + ':' + String(Math.floor((ms%3600000)/60000)).padStart(2,'0') : '';
@@ -1613,12 +1635,13 @@ function exportCSV(type) {
 let toastTimer;
 function toast(msg, type = '') {
   const toastEl = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (type ? ' ' + type : '');
-  void t.offsetWidth;
-  t.classList.add('show');
+  if (!toastEl) return;
+  toastEl.textContent = msg;
+  toastEl.className = 'toast' + (type ? ' ' + type : '');
+  void toastEl.offsetWidth;
+  toastEl.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
 }
 
 // ── INIT ─────────────────────────────────────────────────
@@ -1805,6 +1828,15 @@ function debugRecords() {
     `${i+1}. nome="${r.empName||r.name||'?'}" data="${r.date}" hotel="${r.hotel}" entrada="${r.entrada?'sim':'nao'}" saida="${r.saida?'sim':'nao'}"`
   ).join('\n');
   alert('Registros encontrados (' + recs.length + '):\n\n' + info);
+}
+
+function resetWithPassword() {
+  const senha = prompt('Digite a senha para resetar os dados:');
+  if (senha === null) return;
+  if (senha !== '0000') { toast('Senha incorreta', 'err'); return; }
+  if (!confirm('Apagar TODOS os dados? Esta ação não pode ser desfeita.')) return;
+  localStorage.clear();
+  location.reload();
 }
 </script>
 </body>
