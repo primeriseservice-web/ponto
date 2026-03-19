@@ -1442,11 +1442,17 @@ function chQ(key, delta) {
 
 
 function renderTotals() {
-  ['s','t','tr'].forEach((k, i) => {
-    const vals = [Q.single, Q.twin, Q.triple];
-    const el = document.getElementById('tv-' + k);
-    el.textContent = vals[i];
-    el.className = 'tot-val' + (vals[i] > 0 ? ' lit' : '');
+  const map = [
+    { id: 'tv-s',   val: Q.single },
+    { id: 'tv-t',   val: Q.twin },
+    { id: 'tv-t12', val: Q.twin12 || 0 },
+    { id: 'tv-tr',  val: Q.triple },
+  ];
+  map.forEach(({ id, val }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    el.className = 'tot-val' + (val > 0 ? ' lit' : '');
   });
 }
 
