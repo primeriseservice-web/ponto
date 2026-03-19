@@ -999,15 +999,12 @@ const LANG = {
   }
 };
 
-let currentLang = localStorage.getItem('lang') || 'pt';
+let currentLang = 'pt'; // will be updated after S is ready
 
 let domReady = false;
 function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('lang', lang);
-  try {
-
-  } catch(e) {}
   if (domReady) applyLang();
 }
 
@@ -1092,20 +1089,13 @@ function applyLang() {
 }
 
 // Call applyLang after DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  domReady = true;
-  tick();
-  initSelect();
-  setLang(currentLang);
-  // Init sheet headers and pull employees from Google Sheets
-  initSheetHeaders().then(() => pullEmployees());
-});
-
 // ── STORAGE ──────────────────────────────────────────────
 const S = {
   get: (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
 };
+
+currentLang = S.get('lang', 'pt') || 'pt';
 
 const DB = {
   employees: S.get('emp', []),
@@ -1115,6 +1105,17 @@ const DB = {
   apiKey:    S.get('akey', 'AIzaSyAREIBxgjDuyenzZdyObs3a9OWUSlnrVBQ'),
   scriptUrl: S.get('surl', 'https://script.google.com/macros/s/AKfycbynDnp4lYFz0FCHFXHi9c14lrMzYcTqvc8Fv9vaEqI2sucpskPCrxTzqM6zio8ei4cd/exec'),
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  domReady = true;
+  setInterval(tick, 1000);
+  tick();
+  initSelect();
+  setLang(currentLang);
+  // Init sheet headers and pull employees from Google Sheets
+  initSheetHeaders().then(() => pullEmployees());
+});
+
 const save = k => {
   const map = { employees:'emp', records:'rec', adminPass:'apw', sheetId:'sid', apiKey:'akey' };
   S.set(map[k], DB[k]);
@@ -1158,7 +1159,6 @@ function tick() {
     document.querySelectorAll('.clock-time').forEach(el => el.textContent = hh + ':' + mm);
   }
 }
-setInterval(tick, 1000);
 
 // ── ROUTING ──────────────────────────────────────────────
 function showScreen(n) {
@@ -1857,3 +1857,88 @@ async function initSheetHeaders() {
 }
 
 
+
+// ── RESUMO DO DIA ─────────────────────────────────────────
+function showSummaryScreen(rec) {
+  const nameEl = document.getElementById('sum-emp-name');
+  if (nameEl) {
+    nameEl.textContent = rec.empName || rec.name || '?';
+    nameEl.style.color = '#fff';
+  }
+  const s   = rec.single  || 0;
+  const tw  = rec.twin    || 0;
+  const t12 = rec.twin12  || 0;
+  const tr  = rec.triple  || 0;
+  const tot = s + tw + t12 + tr;
+  const totalEl = document.getElementById('sum-total');
+  if (totalEl) totalEl.textContent = tot;
+  const breakdown = document.getElementById('sum-breakdown');
+  if (breakdown) {
+    breakdown.innerHTML = `
+      <div class="tot-cell"><div class="tot-val">${s}</div><div class="tot-label">Single</div></div>
+      <div class="tot-cell"><div class="tot-val">${tw}</div><div class="tot-label">Double (Twin)</div></div>
+      <div class="tot-cell"><div class="tot-val">${t12}</div><div class="tot-label">Twin 12º</div></div>
+      <div class="tot-cell"><div class="tot-val">${tr}</div><div class="tot-label">Triple</div></div>
+    `;
+  }
+  const ent = rec.entrada ? fmtT(rec.entrada) : '—';
+  const sai = rec.saida   ? fmtT(rec.saida)   : '—';
+  const hrs = calcHours(rec.entrada, rec.saida);
+  const timeEl = document.getElementById('sum-time');
+  if (timeEl) {
+    timeEl.innerHTML = `Entrada: <strong>${ent}</strong> &nbsp;→&nbsp; Saída: <strong>${sai}</strong>` +
+      (hrs ? `&nbsp;&nbsp;|&nbsp;&nbsp;Horas: <strong>${hrs}</strong>` : '');
+  }
+  showScreen('summary');
+}
+
+// ── ADMIN EDIT RECORD ──────────────────────────────────────
+let editingRecordId = null;
+
+function adminEditRecord(recId) {
+  const rec = DB.records.find(r => r.id === recId);
+  if (!rec) { toast('Registro não encontrado', 'err'); return; }
+  editingRecordId = recId;
+  const nameEl = document.getElementById('edit-modal-name');
+  if (nameEl) nameEl.textContent = '✏️ ' + (rec.empName||rec.name||'?');
+  document.getElementById('edit-single').value  = rec.single  || 0;
+  document.getElementById('edit-twin').value    = rec.twin    || 0;
+  document.getElementById('edit-twin12').value  = rec.twin12  || 0;
+  document.getElementById('edit-triple').value  = rec.triple  || 0;
+  const modal = document.getElementById('edit-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function saveEditRecord() {
+  if (!editingRecordId) return;
+  const i = DB.records.findIndex(r => r.id === editingRecordId);
+  if (i < 0) { toast('Registro não encontrado', 'err'); return; }
+  DB.records[i].single = parseInt(document.getElementById('edit-single').value)  || 0;
+  DB.records[i].twin   = parseInt(document.getElementById('edit-twin').value)    || 0;
+  DB.records[i].twin12 = parseInt(document.getElementById('edit-twin12').value)  || 0;
+  DB.records[i].triple = parseInt(document.getElementById('edit-triple').value)  || 0;
+  save('records');
+  pushRecordUpdate(DB.records[i]);
+  toast('Quartos atualizados!', 'ok');
+  closeEditModal();
+  renderDaily();
+}
+
+function closeEditModal() {
+  const modal = document.getElementById('edit-modal');
+  if (modal) modal.style.display = 'none';
+  editingRecordId = null;
+}
+
+function resetWithPassword() {
+  const senha = prompt('Digite a senha para resetar os dados:');
+  if (senha === null) return;
+  if (senha !== '0000') { toast('Senha incorreta', 'err'); return; }
+  if (!confirm('Apagar TODOS os dados? Esta ação não pode ser desfeita.')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+</script>
+</body>
+</html>
