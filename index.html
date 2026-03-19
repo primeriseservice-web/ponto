@@ -1721,14 +1721,14 @@ function exportCSV(type) {
     const date = document.getElementById('rpt-date').value;
     rows = DB.records.filter(r => r.date === date);
     name = 'ponto-' + date + '.csv';
-    hdr  = 'Data;Nome;Horas;Entrada;Saída;Single;Double;Triple;Total Quartos\n';
+    hdr  = 'Data;Nome;Horas;Entrada;Sa\u00edda;Single;Double;Double 12\u00ba;Triple;Total Quartos\n';
     body = rows.map(r => {
-      const tot   = (r.single||0)+(r.twin||0)+(r.triple||0);
+      const tot   = (r.single||0)+(r.twin||0)+(r.twin12||0)+(r.triple||0);
       const nm    = r.empName||r.name||'?';
       const horas = calcHours(r.entrada, r.saida);
       const ent   = r.entrada ? fmtT(r.entrada) : '';
       const sai   = r.saida   ? fmtT(r.saida)   : 'aberto';
-      return `"${r.date}";"${nm}";"${horas}";"${ent}";"${sai}";"${r.single||0}";"${r.twin||0}";"${r.triple||0}";"${tot}"`;
+      return `"${r.date}";"${nm}";"${horas}";"${ent}";"${sai}";"${r.single||0}";"${r.twin||0}";"${r.twin12||0}";"${r.triple||0}";"${tot}"`;
     }).join('\n');
   } else {
     const month = document.getElementById('rpt-month').value;
@@ -1749,12 +1749,24 @@ function exportCSV(type) {
         grpHours[k] += new Date(r.saida) - new Date(r.entrada);
       }
     });
-    hdr  = 'Nome;Single;Double;Double 12º;Triple;Total Quartos;Total Horas\n';
-    body = Object.values(grp).map(g => {
-      const ms = grpHours[g.name] || 0;
-      const th = ms > 0 ? String(Math.floor(ms/3600000)).padStart(2,'0') + ':' + String(Math.floor((ms%3600000)/60000)).padStart(2,'0') : '';
-      return `"${g.name}";"${g.single}";"${g.twin}";"${g.triple}";"${g.single+g.twin+g.triple}";"${th}"`;
-    }).join('\n');
+    hdr  = 'Nome;Single;Double;Double 12\u00ba;Triple;Total Quartos;Total Horas\n';
+    const empRows = Object.values(grp).map(g => {
+      const ms   = grpHours[g.name] || 0;
+      const th   = ms > 0 ? String(Math.floor(ms/3600000)).padStart(2,'0') + ':' + String(Math.floor((ms%3600000)/60000)).padStart(2,'0') : '00:00';
+      const totQ = g.single + g.twin + (g.twin12||0) + g.triple;
+      return `"${g.name}";"${g.single}";"${g.twin}";"${g.twin12||0}";"${g.triple}";"${totQ}";"${th}"`;
+    });
+    // Linha de total geral
+    const allVals = Object.values(grp);
+    const totalS  = allVals.reduce((a,g) => a+g.single, 0);
+    const totalTw = allVals.reduce((a,g) => a+g.twin, 0);
+    const totalT12= allVals.reduce((a,g) => a+(g.twin12||0), 0);
+    const totalTr = allVals.reduce((a,g) => a+g.triple, 0);
+    const totalQ  = totalS + totalTw + totalT12 + totalTr;
+    const totalMs = Object.values(grpHours).reduce((a,v) => a+v, 0);
+    const totalH  = totalMs > 0 ? String(Math.floor(totalMs/3600000)).padStart(2,'0') + ':' + String(Math.floor((totalMs%3600000)/60000)).padStart(2,'0') : '00:00';
+    const totalRow = `"TOTAL";"${totalS}";"${totalTw}";"${totalT12}";"${totalTr}";"${totalQ}";"${totalH}"`;
+    body = [...empRows, totalRow].join('\n');
   }
   if (!body.trim()) { toast('Sem dados', 'err'); return; }
   const a = document.createElement('a');
