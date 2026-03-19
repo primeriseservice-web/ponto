@@ -1113,6 +1113,7 @@ const DB = {
   adminPass: S.get('apw', '1911'),
   sheetId:   S.get('sid', '1ol4QtfpaCWdCWuBY7C5bod0IDwwC-yeFWhtLV7X5WZk'),
   apiKey:    S.get('akey', 'AIzaSyAREIBxgjDuyenzZdyObs3a9OWUSlnrVBQ'),
+  scriptUrl: S.get('surl', 'https://script.google.com/macros/s/AKfycbynDnp4lYFz0FCHFXHi9c14lrMzYcTqvc8Fv9vaEqI2sucpskPCrxTzqM6zio8ei4cd/exec'),
 };
 const save = k => {
   const map = { employees:'emp', records:'rec', adminPass:'apw', sheetId:'sid', apiKey:'akey' };
@@ -1781,20 +1782,13 @@ function toast(msg, type = '') {
 
 
 // ═══════════════════════════════════════════════════════
-// GOOGLE SHEETS SYNC
-// Aba "Funcionarios": Nome | PIN
-// Aba "Registros":   Nome | Hotel | Data | Entrada | Saida | Single | Twin | Triple | Total
+// GOOGLE APPS SCRIPT SYNC
 // ═══════════════════════════════════════════════════════
 
-function sheetBase() {
-  return 'https://sheets.googleapis.com/v4/spreadsheets/' + DB.sheetId;
+function syncReady() {
+  return DB.scriptUrl && DB.scriptUrl.length > 10;
 }
 
-function sheetReady() {
-  return DB.sheetId && DB.apiKey;
-}
-
-// ── MOSTRAR / OCULTAR indicador de sync ──
 function syncShow(msg) {
   const el = document.getElementById('sync-note');
   if (el) { el.textContent = msg || 'sincronizando…'; el.style.display = 'block'; }
@@ -1804,23 +1798,29 @@ function syncHide() {
   if (el) el.style.display = 'none';
 }
 
-// ── LER FUNCIONÁRIOS DA PLANILHA ──────────────────────
+async function postScript(payload) {
+  if (!syncReady()) return;
+  try {
+    await fetch(DB.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+      mode: 'no-cors'
+    });
+  } catch(e) {
+    console.warn('Script sync error:', e);
+  }
+}
+
 async function pullEmployees() {
-  if (!sheetReady()) return;
+  if (!syncReady()) return;
   try {
     syncShow('carregando funcionários…');
-    const url = sheetBase() + '/values/Funcionarios!A:B?key=' + DB.apiKey;
-    const res = await fetch(url);
-    if (!res.ok) { console.warn('Sheets API error:', res.status); syncHide(); return; }
-    const data = await res.json();
-    const rows = (data.values || []).slice(1); // skip header
-    if (!rows.length) { syncHide(); return; }
-    // Merge: keep local employees not in sheet, add sheet employees
-    const sheetEmps = rows
-      .filter(r => r[0] && r[1])
-      .map(r => ({ name: r[0].trim(), pin: r[1].trim() }));
-    if (sheetEmps.length > 0) {
-      DB.employees = sheetEmps;
+    const res = await fetch(DB.scriptUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const emps = await res.json();
+    if (Array.isArray(emps) && emps.length > 0) {
+      DB.employees = emps;
       save('employees');
       initSelect();
     }
@@ -1831,208 +1831,29 @@ async function pullEmployees() {
   }
 }
 
-// ── SALVAR FUNCIONÁRIOS NA PLANILHA ───────────────────
 async function pushEmployees() {
-  if (!sheetReady()) return;
-  try {
-    syncShow('salvando funcionários…');
-    // Clear and rewrite
-    const values = [['Nome', 'PIN'], ...DB.employees.map(e => [e.name, e.pin])];
-    const url = sheetBase() + '/values/Funcionarios!A1?valueInputOption=RAW&key=' + DB.apiKey;
-    // First clear the sheet
-    await fetch(sheetBase() + '/values/Funcionarios!A:B:clear?key=' + DB.apiKey, { method: 'POST' });
-    // Then write
-    await fetch(url, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values })
-    });
-    syncHide();
-  } catch(e) {
-    syncHide();
-    console.warn('pushEmployees error:', e);
-  }
+  if (!syncReady()) return;
+  syncShow('salvando funcionários…');
+  await postScript({ action: 'saveEmployees', employees: DB.employees });
+  syncHide();
 }
 
-// ── SALVAR UM REGISTRO DE PONTO ───────────────────────
 async function pushRecord(rec) {
-  if (!sheetReady()) return;
-  try {
-    syncShow('salvando registro…');
-    const row = [
-      rec.name,
-      rec.hotel,
-      rec.date,
-      rec.entrada ? new Date(rec.entrada).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '',
-      rec.saida   ? new Date(rec.saida).toLocaleTimeString('pt-BR',   {hour:'2-digit',minute:'2-digit'}) : '',
-      rec.single  || 0,
-      rec.twin    || 0,
-      rec.triple  || 0,
-      (rec.single || 0) + (rec.twin || 0) + (rec.triple || 0)
-    ];
-    const url = sheetBase() + '/values/Registros!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key=' + DB.apiKey;
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values: [row] })
-    });
-    syncHide();
-  } catch(e) {
-    syncHide();
-    console.warn('pushRecord error:', e);
-  }
+  if (!syncReady()) return;
+  syncShow('salvando registro…');
+  await postScript({ action: 'addRecord', record: rec });
+  syncHide();
 }
 
-// ── ATUALIZAR ÚLTIMA LINHA (saída) ────────────────────
 async function pushRecordUpdate(rec) {
-  if (!sheetReady()) return;
-  // Find the row in sheet with same name+date+entrada and update saida+totals
-  try {
-    syncShow('atualizando registro…');
-    const url = sheetBase() + '/values/Registros!A:I?key=' + DB.apiKey;
-    const res = await fetch(url);
-    if (!res.ok) { console.warn('Sheets API error:', res.status); syncHide(); return; }
-    const data = await res.json();
-    const rows = data.values || [];
-    const entradaStr = rec.entrada ? new Date(rec.entrada).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
-    // Find matching row (name + date + entrada match)
-    let rowIdx = -1;
-    for (let i = 1; i < rows.length; i++) {
-      if (rows[i][0] === rec.name && rows[i][2] === rec.date && rows[i][3] === entradaStr) {
-        rowIdx = i + 1; // 1-based
-        break;
-      }
-    }
-    if (rowIdx > 0) {
-      const saidaStr = rec.saida ? new Date(rec.saida).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
-      const total = (rec.single||0)+(rec.twin||0)+(rec.triple||0);
-      const updateUrl = sheetBase() + '/values/Registros!E' + rowIdx + ':I' + rowIdx + '?valueInputOption=RAW&key=' + DB.apiKey;
-      await fetch(updateUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [[saidaStr, rec.single||0, rec.twin||0, rec.triple||0, total]] })
-      });
-    }
-    syncHide();
-  } catch(e) {
-    syncHide();
-    console.warn('pushRecordUpdate error:', e);
-  }
+  if (!syncReady()) return;
+  syncShow('atualizando registro…');
+  await postScript({ action: 'updateRecord', record: rec });
+  syncHide();
 }
 
-// ── CRIAR CABEÇALHOS SE A PLANILHA ESTIVER VAZIA ─────
 async function initSheetHeaders() {
-  if (!sheetReady()) return;
-  try {
-    const url = sheetBase() + '/values/Funcionarios!A1?key=' + DB.apiKey;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!data.values || data.values[0]?.[0] !== 'Nome') {
-      // Write headers to Funcionarios
-      await fetch(sheetBase() + '/values/Funcionarios!A1?valueInputOption=RAW&key=' + DB.apiKey, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [['Nome', 'PIN']] })
-      });
-    }
-    const url2 = sheetBase() + '/values/Registros!A1?key=' + DB.apiKey;
-    const res2 = await fetch(url2);
-    const data2 = await res2.json();
-    if (!data2.values || data2.values[0]?.[0] !== 'Nome') {
-      await fetch(sheetBase() + '/values/Registros!A1?valueInputOption=RAW&key=' + DB.apiKey, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [['Nome','Hotel','Data','Entrada','Saida','Single','Twin','Triple','Total']] })
-      });
-    }
-  } catch(e) {
-    console.warn('initSheetHeaders error:', e);
-  }
+  // Não necessário com Apps Script — o script cria os cabeçalhos automaticamente
 }
 
 
-function debugRecords() {
-  const recs = DB.records;
-  if (!recs.length) { alert('Nenhum registro no banco!'); return; }
-  const info = recs.map((r,i) => 
-    `${i+1}. nome="${r.empName||r.name||'?'}" data="${r.date}" hotel="${r.hotel}" entrada="${r.entrada?'sim':'nao'}" saida="${r.saida?'sim':'nao'}"`
-  ).join('\n');
-  alert('Registros encontrados (' + recs.length + '):\n\n' + info);
-}
-
-function resetWithPassword() {
-  const senha = prompt('Digite a senha para resetar os dados:');
-  if (senha === null) return;
-  if (senha !== '0000') { toast('Senha incorreta', 'err'); return; }
-  if (!confirm('Apagar TODOS os dados? Esta ação não pode ser desfeita.')) return;
-  localStorage.clear();
-  location.reload();
-}
-
-let editingRecordId = null;
-
-function adminEditRecord(recId) {
-  const rec = DB.records.find(r => r.id === recId);
-  if (!rec) { toast('Registro não encontrado', 'err'); return; }
-  editingRecordId = recId;
-  document.getElementById('edit-modal-name').textContent = '✏️ Editar — ' + (rec.empName||rec.name||'?');
-  document.getElementById('edit-single').value  = rec.single  || 0;
-  document.getElementById('edit-twin').value    = rec.twin    || 0;
-  document.getElementById('edit-twin12').value  = rec.twin12  || 0;
-  document.getElementById('edit-triple').value  = rec.triple  || 0;
-  const modal = document.getElementById('edit-modal');
-  modal.style.display = 'flex';
-}
-
-function saveEditRecord() {
-  if (!editingRecordId) return;
-  const i = DB.records.findIndex(r => r.id === editingRecordId);
-  if (i < 0) { toast('Registro não encontrado', 'err'); return; }
-  DB.records[i].single = parseInt(document.getElementById('edit-single').value)  || 0;
-  DB.records[i].twin   = parseInt(document.getElementById('edit-twin').value)    || 0;
-  DB.records[i].twin12 = parseInt(document.getElementById('edit-twin12').value)  || 0;
-  DB.records[i].triple = parseInt(document.getElementById('edit-triple').value)  || 0;
-  save('records');
-  pushRecordUpdate(DB.records[i]);
-  toast('Quartos atualizados!', 'ok');
-  closeEditModal();
-  renderDaily();
-}
-
-function closeEditModal() {
-  document.getElementById('edit-modal').style.display = 'none';
-  editingRecordId = null;
-}
-
-function showSummaryScreen(rec) {
-  const clr = empColor(rec.empName || rec.name || '?');
-  document.getElementById('sum-emp-name').textContent = rec.empName || rec.name || '?';
-  document.getElementById('sum-emp-name').style.color = '#fff';
-
-  const s   = rec.single  || 0;
-  const tw  = rec.twin    || 0;
-  const t12 = rec.twin12  || 0;
-  const tr  = rec.triple  || 0;
-  const tot = s + tw + t12 + tr;
-
-  document.getElementById('sum-total').textContent = tot;
-
-  document.getElementById('sum-breakdown').innerHTML = `
-    <div class="tot-cell"><div class="tot-val">${s}</div><div class="tot-label">Single</div></div>
-    <div class="tot-cell"><div class="tot-val">${tw}</div><div class="tot-label">Double (Twin)</div></div>
-    <div class="tot-cell"><div class="tot-val">${t12}</div><div class="tot-label">Twin 12º</div></div>
-    <div class="tot-cell"><div class="tot-val">${tr}</div><div class="tot-label">Triple</div></div>
-  `;
-
-  const ent = rec.entrada ? fmtT(rec.entrada) : '—';
-  const sai = rec.saida   ? fmtT(rec.saida)   : '—';
-  const hrs = calcHours(rec.entrada, rec.saida);
-  document.getElementById('sum-time').innerHTML = 
-    `Entrada: <strong>${ent}</strong> &nbsp;→&nbsp; Saída: <strong>${sai}</strong>` +
-    (hrs ? `&nbsp;&nbsp;|&nbsp;&nbsp;Horas: <strong>${hrs}</strong>` : '');
-
-  showScreen('summary');
-}
-</script>
-</body>
-</html>
