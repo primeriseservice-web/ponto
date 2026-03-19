@@ -332,7 +332,7 @@ select option { background: #1e1e23; color: var(--text); }
 /* ── TOTALS BAR ── */
 .totals-bar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 .tot-cell {
@@ -645,7 +645,7 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
     </div>
   </div>
 
-  <button class="btn btn-gold" id="go-btn" data-i18n="labelContinuar" onclick="goToEmployee()" disabled>Continuar</button>
+  <button class="btn btn-gold" id="go-btn" onclick="goToEmployee()" disabled>Entrada</button>
 </div>
 
 <!-- ═══ SCREEN: PONTO ═══ -->
@@ -1005,8 +1005,7 @@ function applyLang() {
     } catch(e) { punchBtn.textContent = L.punchIn; }
   }
 
-  const goBtn = document.getElementById('go-btn');
-  if (goBtn) goBtn.textContent = L.labelContinuar;
+  // go-btn text managed by updateGoBtn()
 
   const hotelLbl = document.getElementById('pt-hotel-label');
   if (hotelLbl && hotelLbl.textContent) hotelLbl.textContent = L.labelHotelKin;
@@ -1121,6 +1120,9 @@ function initSelect() {
   if (tq > 0) { badge.textContent = t('badgeRooms', tq); badge.style.display = 'block'; }
   else badge.style.display = 'none';
 }
+  updateGoBtn();
+}
+
 
 function onEmpChange() {
   const v = document.getElementById('emp-sel').value;
@@ -1130,6 +1132,9 @@ function onEmpChange() {
   document.getElementById('go-btn').disabled = true;
   if (v !== '') setTimeout(() => document.getElementById('pin-real').focus(), 100);
 }
+  updateGoBtn();
+}
+
 
 function onPinInput() {
   const v = document.getElementById('pin-real').value.replace(/\D/g, '').slice(0, 4);
@@ -1157,6 +1162,34 @@ function flashPinError() {
   }, 600);
 }
 
+function updateGoBtn() {
+  const sel = document.getElementById('emp-sel');
+  const btn = document.getElementById('go-btn');
+  if (!sel || !btn) return;
+  const idx = parseInt(sel.value);
+  const emp = DB.employees[idx];
+  if (!emp) {
+    btn.textContent = t('labelEntrada');
+    btn.disabled = true;
+    return;
+  }
+  const open   = DB.records.find(r => r.empIdx === idx && r.date === today() && !r.saida);
+  const closed = DB.records.find(r => r.empIdx === idx && r.date === today() && r.saida);
+  if (closed) {
+    btn.textContent = 'Ponto encerrado hoje';
+    btn.disabled = true;
+    btn.className = 'btn btn-outline';
+  } else if (open) {
+    btn.textContent = 'Continuar';
+    btn.disabled = false;
+    btn.className = 'btn btn-gold';
+  } else {
+    btn.textContent = 'Entrada';
+    btn.disabled = false;
+    btn.className = 'btn btn-gold';
+  }
+}
+
 function goToEmployee() {
   const idx = parseInt(document.getElementById('emp-sel').value);
   const pin = document.getElementById('pin-real').value;
@@ -1165,50 +1198,79 @@ function goToEmployee() {
   if (pin !== emp.pin) { flashPinError(); toast(t('toastPinErr'), 'err'); return; }
 
   cur = { ...emp, idx };
-  hotel = null;
-  Q = { single: 0, twin: 0, twin12: 0, triple: 0 };
+  hotel = 'kinuura';
+
+  const open   = DB.records.find(r => r.empIdx === cur.idx && r.date === today() && !r.saida);
+  const closed = DB.records.find(r => r.empIdx === cur.idx && r.date === today() && r.saida);
+
+  if (closed) {
+    // Já encerrou — não faz nada, botão já está desabilitado
+    return;
+  }
+
+  if (!open) {
+    // Primeira entrada — registrar e ir para contadores
+    Q = { single: 0, twin: 0, twin12: 0, triple: 0 };
+    const rec = {
+      id: Date.now() + '',
+      empIdx: cur.idx, name: cur.name, empName: cur.name,
+      hotel, date: today(),
+      entrada: nowISO(), saida: null,
+      single: 0, twin: 0, twin12: 0, triple: 0,
+    };
+    DB.records.push(rec);
+    save('records');
+    pushRecord(rec);
+    toast(t('toastIn'), 'ok');
+  } else {
+    // Já entrou — carregar contadores e ir para tela
+    Q = { single: open.single||0, twin: open.twin||0, twin12: open.twin12||0, triple: open.triple||0 };
+  }
+
   initPonto();
   showScreen('ponto');
 }
 
-// ── PONTO SCREEN ─────────────────────────────────────────
+
+function setCountersLocked(locked) {
+  const btns = document.querySelectorAll('.q-minus, .q-plus');
+  btns.forEach(b => {
+    b.disabled = locked;
+    b.style.opacity = locked ? '0.3' : '1';
+    b.style.cursor = locked ? 'not-allowed' : 'pointer';
+  });
+}
+
 function initPonto() {
   document.getElementById('pt-name').textContent = cur.name;
   const open   = getOpen();
   const closed = getClosed();
 
-  // Hotel label
   const hotelLbl = document.getElementById('pt-hotel-label');
   if (hotelLbl) hotelLbl.textContent = 'Hotel: Kinuura';
 
   if (open) {
-    // Em turno — mostrar saída
     hotel = open.hotel;
-    Q = { single: open.single || 0, twin: open.twin || 0, twin12: open.twin12 || 0, triple: open.triple || 0 };
-    document.getElementById('hotel-picker').style.display = 'none';
-    // setHotelTag removido
+    Q = { single: open.single||0, twin: open.twin||0, twin12: open.twin12||0, triple: open.triple||0 };
     setPunchBtn('out');
+    setCountersLocked(false);
   } else if (closed) {
-    // Já saiu hoje — contadores editáveis, botão desabilitado
     hotel = closed.hotel;
-    Q = { single: closed.single || 0, twin: closed.twin || 0, twin12: closed.twin12 || 0, triple: closed.triple || 0 };
-    document.getElementById('hotel-picker').style.display = 'none';
-    // setHotelTag removido
+    Q = { single: closed.single||0, twin: closed.twin||0, twin12: closed.twin12||0, triple: closed.triple||0 };
     setPunchBtn('done');
+    setCountersLocked(true);
   } else {
-    // Ainda não entrou
     hotel = 'kinuura';
-    document.getElementById('hotel-picker').style.display = 'none';
-    document.getElementById('pt-hotel-tag').style.display = 'none';
     setPunchBtn('in');
+    setCountersLocked(false);
   }
+
+  document.getElementById('hotel-picker').style.display = 'none';
+  document.getElementById('pt-hotel-tag').style.display = 'none';
+  document.getElementById('header-tag').style.display = 'none';
 
   renderQRows();
   renderTotals();
-
-  const ht = document.getElementById('header-tag');
-  const rec = open || closed;
-  ht.style.display = 'none'; // hotel tag removido do header
 }
 
 
@@ -1313,40 +1375,21 @@ function renderTotals() {
 }
 
 function punch() {
-  if (!hotel) { toast(t('toastNoHotel'), 'err'); return; }
-  const open   = getOpen();
-  const closed = getClosed();
-
-  if (!open && !closed) {
-    // Primeira entrada do dia
-    const rec = {
-      id: Date.now() + '',
-      empIdx: cur.idx, name: cur.name, empName: cur.name,
-      hotel, date: today(),
-      entrada: nowISO(), saida: null,
-      single: 0, twin: 0, twin12: 0, triple: 0,
-    };
-    DB.records.push(rec);
-    save('records');
-    pushRecord(rec);
-    toast(t('toastIn'), 'ok');
-  } else if (open && !closed) {
-    // Registrar saída
-    const i = DB.records.findIndex(r => r.id === open.id);
-    DB.records[i].saida  = nowISO();
-    DB.records[i].single = Q.single;
-    DB.records[i].twin   = Q.twin;
-    DB.records[i].twin12 = Q.twin12;
-    DB.records[i].triple = Q.triple;
-    const tot = Q.single + Q.twin + (Q.twin12||0) + Q.triple;
-    save('records');
-    pushRecordUpdate(DB.records[i]);
-    toast(t('toastOut', tot), 'ok');
-  } else {
-    // Já completou entrada e saída hoje
-    toast('Ponto já registrado hoje', 'err');
+  const open = getOpen();
+  if (!open) {
+    toast('Nenhum registro aberto', 'err');
     return;
   }
+  const i = DB.records.findIndex(r => r.id === open.id);
+  DB.records[i].saida  = nowISO();
+  DB.records[i].single = Q.single;
+  DB.records[i].twin   = Q.twin;
+  DB.records[i].twin12 = Q.twin12 || 0;
+  DB.records[i].triple = Q.triple;
+  const tot = Q.single + Q.twin + (Q.twin12||0) + Q.triple;
+  save('records');
+  pushRecordUpdate(DB.records[i]);
+  toast(t('toastOut', tot), 'ok');
   initPonto();
 }
 
