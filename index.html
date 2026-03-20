@@ -1174,7 +1174,13 @@ let cur = null;
 let hotel = null;
 let Q = { single: 0, twin: 0, triple: 0 };
 
-const today = () => new Date().toISOString().split('T')[0];
+const today = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+};
 const nowISO = () => new Date().toISOString();
 const fmtT = iso => new Date(iso).toLocaleTimeString(t('locale'), { hour: '2-digit', minute: '2-digit' });
 
