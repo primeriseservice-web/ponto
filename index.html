@@ -754,6 +754,10 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
     <div class="sum-strip" id="day-summary"></div>
     <div class="scrollable" id="day-list"></div>
     <button class="btn btn-outline" style="margin-top:8px" id="btn-export-d" onclick="exportCSV('daily')">↓ Exportar CSV</button>
+    <button class="btn btn-outline" style="margin-top:4px;font-size:11px;opacity:0.5" onclick="debugInfo()">🔍 Debug</button>
+    <div id="debug-out" style="font-size:11px;color:#aaa;margin-top:8px;word-break:break-all;display:none"></div>
+    <button class="btn btn-outline" style="margin-top:4px;font-size:11px;opacity:0.5" onclick="debugInfo()">🔍 Debug</button>
+    <div id="debug-output" style="font-size:11px;color:var(--gold);margin-top:8px;word-break:break-all;display:none"></div>
   </div>
 
   <!-- ── TAB: MENSAL ── -->
@@ -2038,6 +2042,28 @@ async function pullRecords() {
     console.warn('pullRecords error:', e);
     return false;
   }
+}
+
+
+function debugInfo() {
+  const el = document.getElementById('debug-output');
+  el.style.display = 'block';
+  const t = today();
+  const total = DB.records.length;
+  const matching = DB.records.filter(r => r.date === t).length;
+  const sample = DB.records.slice(0,3).map(r => r.date).join(' | ');
+  el.innerHTML = `Hoje: ${t}<br>Total registros: ${total}<br>Registros hoje: ${matching}<br>Datas: ${sample || 'nenhum'}`;
+}
+
+
+function debugInfo() {
+  const el = document.getElementById('debug-out');
+  el.style.display = 'block';
+  const t = today();
+  const total = DB.records.length;
+  const matching = DB.records.filter(r => r.date === t).length;
+  const sample = DB.records.slice(0,3).map(r => r.date + '|' + (r.empName||r.name||'?')).join(' / ');
+  el.textContent = 'Hoje=' + t + ' | Total=' + total + ' | Hoje=' + matching + ' | Amostra: ' + sample;
 }
 
 </script>
