@@ -1496,7 +1496,12 @@ function adminLogout() { showScreen('select'); }
 function initAdmin() {
   if (!document.getElementById('rpt-date').value) document.getElementById('rpt-date').value = today();
   if (!document.getElementById('rpt-month').value) document.getElementById('rpt-month').value = today().slice(0, 7);
-  renderDaily(); renderMonthly(); renderEmpList();
+  // Pull latest records from sheet then render
+  pullRecords().then(() => {
+    renderDaily(); renderMonthly(); renderEmpList();
+  }).catch(() => {
+    renderDaily(); renderMonthly(); renderEmpList();
+  });
 }
 
 function switchTab(id, btn) {
@@ -1962,6 +1967,31 @@ function resetWithPassword() {
   if (!confirm('Apagar TODOS os dados? Esta ação não pode ser desfeita.')) return;
   localStorage.clear();
   location.reload();
+}
+
+
+// ── LER REGISTROS DA PLANILHA ──────────────────────────────
+async function pullRecords() {
+  if (!syncReady()) return false;
+  try {
+    syncShow('carregando registros…');
+    const res = await fetch(DB.scriptUrl + '?action=getRecords');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const records = await res.json();
+    if (Array.isArray(records) && records.length > 0) {
+      // Merge: sheet records take priority, keep local ones not in sheet
+      const sheetIds = new Set(records.map(r => r.id));
+      const localOnly = DB.records.filter(r => !sheetIds.has(r.id));
+      DB.records = [...records, ...localOnly];
+      save('records');
+    }
+    syncHide();
+    return true;
+  } catch(e) {
+    syncHide();
+    console.warn('pullRecords error:', e);
+    return false;
+  }
 }
 
 </script>
