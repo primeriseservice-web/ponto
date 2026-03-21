@@ -1182,7 +1182,19 @@ const today = () => {
   return `${y}-${m}-${day}`;
 };
 const nowISO = () => new Date().toISOString();
-const fmtT = iso => new Date(iso).toLocaleTimeString(t('locale'), { hour: '2-digit', minute: '2-digit' });
+const fmtT = iso => {
+  if (!iso) return '—';
+  // If already HH:mm format
+  if (/^\d{2}:\d{2}$/.test(iso)) return iso;
+  // Parse ISO string manually to avoid timezone issues
+  try {
+    const parts = iso.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (parts) return parts[4] + ':' + parts[5];
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso.substring(0,5) || '—';
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  } catch(e) { return '—'; }
+};
 
 // ── SELECT SCREEN ─────────────────────────────────────────
 function initSelect() {
@@ -1537,6 +1549,14 @@ function empColor(name) {
 // ── CÁLCULO DE HORAS ──────────────────────────────────────
 function calcHours(entrada, saida) {
   if (!entrada || !saida) return '';
+  // Handle HH:mm strings (from sheet) — can't calculate duration without date
+  if (/^\d{2}:\d{2}$/.test(entrada) && /^\d{2}:\d{2}$/.test(saida)) {
+    const [eh, em] = entrada.split(':').map(Number);
+    const [sh, sm] = saida.split(':').map(Number);
+    const diffMin = (sh * 60 + sm) - (eh * 60 + em);
+    if (diffMin <= 0) return '';
+    return String(Math.floor(diffMin/60)).padStart(2,'0') + ':' + String(diffMin%60).padStart(2,'0');
+  }
   const diff = new Date(saida) - new Date(entrada);
   if (diff <= 0) return '';
   const h = Math.floor(diff / 3600000);
@@ -1983,7 +2003,10 @@ async function pullRecords() {
       const records = raw.map(r => {
         // Convert "HH:mm" time strings back to ISO for app compatibility
         const toISO = (date, time) => {
-          if (!time || time === '') return null;
+          if (!time || time === '' || time === 'null') return null;
+          // time can be "HH:mm" or already ISO
+          if (time.includes('T')) return time;
+          // Build proper local ISO string
           return date + 'T' + time + ':00';
         };
         return {
