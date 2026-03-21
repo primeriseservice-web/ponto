@@ -1977,9 +1977,31 @@ async function pullRecords() {
     syncShow('carregando registros…');
     const res = await fetch(DB.scriptUrl + '?action=getRecords');
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const records = await res.json();
-    if (Array.isArray(records) && records.length > 0) {
-      // Merge: sheet records take priority, keep local ones not in sheet
+    const raw = await res.json();
+    if (Array.isArray(raw) && raw.length > 0) {
+      // Convert sheet format to app format
+      const records = raw.map(r => {
+        // Convert "HH:mm" time strings back to ISO for app compatibility
+        const toISO = (date, time) => {
+          if (!time || time === '') return null;
+          return date + 'T' + time + ':00';
+        };
+        return {
+          id:      r.id,
+          empIdx:  -1,
+          empName: r.empName || r.name || '?',
+          name:    r.empName || r.name || '?',
+          hotel:   r.hotel || 'kinuura',
+          date:    r.date,
+          entrada: toISO(r.date, r.entrada),
+          saida:   toISO(r.date, r.saida),
+          single:  r.single  || 0,
+          twin:    r.twin    || 0,
+          twin12:  r.twin12  || 0,
+          triple:  r.triple  || 0,
+        };
+      });
+      // Merge: sheet records take priority
       const sheetIds = new Set(records.map(r => r.id));
       const localOnly = DB.records.filter(r => !sheetIds.has(r.id));
       DB.records = [...records, ...localOnly];
