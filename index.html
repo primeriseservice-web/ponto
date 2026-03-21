@@ -2024,11 +2024,12 @@ async function pullRecords() {
           triple:  r.triple  || 0,
         };
       });
-      // Merge: sheet records take priority
+      // Merge in memory only — don't persist sheet records to localStorage
+      // This ensures all devices always see fresh data from sheet
       const sheetIds = new Set(records.map(r => r.id));
       const localOnly = DB.records.filter(r => !sheetIds.has(r.id));
       DB.records = [...records, ...localOnly];
-      save('records');
+      // Note: intentionally NOT saving to localStorage
     }
     syncHide();
     return true;
