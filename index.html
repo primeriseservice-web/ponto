@@ -754,10 +754,8 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
     <div class="sum-strip" id="day-summary"></div>
     <div class="scrollable" id="day-list"></div>
     <button class="btn btn-outline" style="margin-top:8px" id="btn-export-d" onclick="exportCSV('daily')">↓ Exportar CSV</button>
-    <button class="btn btn-outline" style="margin-top:4px;font-size:11px;opacity:0.5" onclick="debugInfo()">🔍 Debug</button>
+    <button class="btn btn-outline" style="margin-top:4px;font-size:11px;opacity:0.5" ></button>
     <div id="debug-out" style="font-size:11px;color:#aaa;margin-top:8px;word-break:break-all;display:none"></div>
-    <button class="btn btn-outline" style="margin-top:4px;font-size:11px;opacity:0.5" onclick="debugInfo()">🔍 Debug</button>
-    <div id="debug-output" style="font-size:11px;color:var(--gold);margin-top:8px;word-break:break-all;display:none"></div>
   </div>
 
   <!-- ── TAB: MENSAL ── -->
@@ -1130,11 +1128,20 @@ const save = k => {
 // ── HELPERS ───────────────────────────────────────────────
 function calcHours(entrada, saida) {
   if (!entrada || !saida) return '';
+  // Handle HH:mm strings from sheet
+  const hhmmRe = /^\d{1,2}:\d{2}$/;
+  if (hhmmRe.test(String(entrada)) && hhmmRe.test(String(saida))) {
+    const [eh, em] = String(entrada).split(':').map(Number);
+    const [sh, sm] = String(saida).split(':').map(Number);
+    const diffMin = (sh * 60 + sm) - (eh * 60 + em);
+    if (diffMin <= 0) return '';
+    return String(Math.floor(diffMin/60)).padStart(2,'0') + ':' + String(diffMin%60).padStart(2,'0');
+  }
   const diff = new Date(saida) - new Date(entrada);
-  if (diff <= 0) return '0:00';
+  if (diff <= 0) return '';
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
-  return h + ':' + String(m).padStart(2, '0');
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
 }
 function calcHoursDecimal(entrada, saida) {
   if (!entrada || !saida) return 0;
@@ -2045,26 +2052,7 @@ async function pullRecords() {
 }
 
 
-function debugInfo() {
-  const el = document.getElementById('debug-output');
-  el.style.display = 'block';
-  const t = today();
-  const total = DB.records.length;
-  const matching = DB.records.filter(r => r.date === t).length;
-  const sample = DB.records.slice(0,3).map(r => r.date).join(' | ');
-  el.innerHTML = `Hoje: ${t}<br>Total registros: ${total}<br>Registros hoje: ${matching}<br>Datas: ${sample || 'nenhum'}`;
-}
 
-
-function debugInfo() {
-  const el = document.getElementById('debug-out');
-  el.style.display = 'block';
-  const t = today();
-  const total = DB.records.length;
-  const matching = DB.records.filter(r => r.date === t).length;
-  const sample = DB.records.slice(0,3).map(r => r.date + '|' + (r.empName||r.name||'?')).join(' / ');
-  el.textContent = 'Hoje=' + t + ' | Total=' + total + ' | Hoje=' + matching + ' | Amostra: ' + sample;
-}
 
 </script>
 </body>
